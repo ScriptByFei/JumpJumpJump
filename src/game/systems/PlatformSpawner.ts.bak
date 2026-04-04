@@ -1,0 +1,152 @@
+import Phaser from 'phaser';
+import { Platform, PlatformType } from '../objects/Platform';
+import {
+  GAME_WIDTH,
+  PLATFORM_WIDTH,
+  PLATFORM_VERTICAL_GAP_MIN,
+  PLATFORM_VERTICAL_GAP_MAX,
+  PLATFORM_SPAWN_AHEAD,
+} from '../config';
+
+export class PlatformSpawner {
+  private scene: Phaser.Scene;
+  private platformGroup!: Phaser.Physics.Arcade.Group;
+  private highestY = 0;
+  private difficulty = 1;
+  private lastPlatformX = GAME_WIDTH / 2;
+
+  constructor(scene: Phaser.Scene, startingY: number) {
+    this.scene = scene;
+    // Create a Phaser Group — stays in sync with physics automatically
+    this.platformGroup = scene.physics.add.group();
+    this.highestY = startingY;
+    this.generateInitialPlatforms();
+  }
+
+  // ─── Initial generation ───────────────────────────────────────────────────
+
+  private generateInitialPlatforms(): void {
+    // First platform directly under player start
+    this.pushPlatform(GAME_WIDTH / 2, 560, 'normal');
+    // Second platform — easy reachable
+    this.pushPlatform(GAME_WIDTH / 2 + 60, 480, 'normal');
+    // Third platform — easy reachable
+    this.pushPlatform(GAME_WIDTH / 2 - 60, 400, 'normal');
+
+    // Generate rest going up
+    let y = 320;
+    for (let i = 0; i < 12; i++) {
+      y -= this.randomGap();
+      const x = this.randomX(y);
+      const type = this.randomType();
+      this.pushPlatform(x, y, type);
+    }
+    this.highestY = y;
+  }
+
+  // ─── Spawn logic ───────────────────────────────────────────────────────────
+
+  spawnAboveCamera(cameraTopY: number): void {
+    const spawnBelow = cameraTopY - PLATFORM_SPAWN_AHEAD;
+
+    while (this.highestY > spawnBelow) {
+      const gap = this.randomGap();
+      this.highestY -= gap;
+
+      const x = this.randomX(this.highestY);
+      const type = this.randomType();
+      this.pushPlatform(x, this.highestY, type);
+    }
+  }
+
+  private pushPlatform(x: number, y: number, type: PlatformType): void {
+    const textureMap: Record<PlatformType, string> = {
+      normal: 'platform',
+      moving: 'platform-moving',
+      fragile: 'platform-fragile',
+    };
+    const platform = new Platform(this.scene, x, y, textureMap[type], type);
+    // Add to the Group — Phaser automatically handles physics registration
+    this.platformGroup.add(platform);
+    this.lastPlatformX = x;
+  }
+
+  // ─── Cleanup ───────────────────────────────────────────────────────────────
+
+  removeBelowCamera(cameraBottomY: number): void {
+    this.platformGroup.getChildren().forEach((child) => {
+      const p = child as Platform;
+      if (p.y > cameraBottomY + 150 || !p.alive) {
+        this.platformGroup.remove(p, true, true);
+      }
+    });
+  }
+
+  // ─── Difficulty ─────────────────────────────────────────────────────────
+
+  setDifficulty(level: number): void {
+    this.difficulty = Math.max(1, Math.min(level, 10));
+  }
+
+  increaseDifficulty(delta = 0.5): void {
+    this.difficulty = Math.min(this.difficulty + delta, 10);
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  private randomGap(): number {
+    const difficultyOffset = (10 - this.difficulty) * 2;
+    const min = Math.max(55, PLATFORM_VERTICAL_GAP_MIN - difficultyOffset);
+    const max = Math.max(85, PLATFORM_VERTICAL_GAP_MAX - difficultyOffset * 1.5);
+    return Phaser.Math.Between(Math.floor(min), Math.floor(max));
+  }
+
+  private randomX(_y: number): number {
+    const margin = PLATFORM_WIDTH / 2 + 10;
+    const last = this.lastPlatformX;
+    const lastCentered = last > GAME_WIDTH / 2 - 40 && last < GAME_WIDTH / 2 + 40;
+
+    let x: number;
+
+    if (Math.random() < 0.3 && !lastCentered) {
+      x = GAME_WIDTH / 2 + Phaser.Math.Between(-50, 50);
+    } else if (Math.random() < 0.4) {
+      const side = last < GAME_WIDTH / 2 ? 1 : -1;
+      x = Phaser.Math.Between(
+        margin,
+        GAME_WIDTH / 2 + side * Phaser.Math.Between(20, 120)
+      );
+    } else {
+      x = Phaser.Math.Between(margin, GAME_WIDTH - margin);
+    }
+
+    return Phaser.Math.Clamp(x, margin, GAME_WIDTH - margin);
+  }
+
+  private randomType(): PlatformType {
+    const r = Math.random();
+    const d = this.difficulty;
+
+    const fragileChance = d < 3 ? 0 : (d - 3) * 0.03;
+    if (r < fragileChance) return 'fragile';
+
+    const movingChance = d < 2 ? 0.1 : 0.1 + (d - 2) * 0.03;
+    if (r < fragileChance + movingChance) return 'moving';
+
+    return 'normal';
+  }
+
+  // ─── Accessors ─────────────────────────────────────────────────────────────
+
+  getGroup(): Phaser.Physics.Arcade.Group {
+    return this.platformGroup;
+  }
+
+  getHighestY(): number {
+    return this.highestY;
+  }
+
+  getDifficulty(): number {
+    return this.difficulty;
+  }
+}

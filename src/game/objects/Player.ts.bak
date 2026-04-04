@@ -1,0 +1,145 @@
+import Phaser from 'phaser';
+import {
+  GAME_WIDTH,
+  PLAYER_JUMP_VELOCITY,
+  PLAYER_MOVE_SPEED,
+  PLAYER_SIZE_W,
+  PLAYER_SIZE_H,
+} from '../config';
+
+export class Player extends Phaser.Physics.Arcade.Sprite {
+  // Input
+  private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+  private keyA!: Phaser.Input.Keyboard.Key;
+  private keyD!: Phaser.Input.Keyboard.Key;
+  private touchLeft = false;
+  private touchRight = false;
+
+  // Jump state
+  private jumpCooldown = 0;
+  private readonly JUMP_COOLDOWN_MS = 120;
+
+  // Visual
+  private landingParticles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
+
+  constructor(scene: Phaser.Scene, x: number, y: number) {
+    super(scene, x, y, 'player');
+    scene.add.existing(this);
+    scene.physics.add.existing(this);
+
+    this.setCollideWorldBounds(false);
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    body.setSize(PLAYER_SIZE_W, PLAYER_SIZE_H);
+    body.setOffset(
+      (40 - PLAYER_SIZE_W) / 2,
+      (40 - PLAYER_SIZE_H)
+    );
+
+    this.setupKeyboard(scene);
+    this.setupTouch(scene);
+    this.createLandingEffect(scene);
+  }
+
+  // ─── Input Setup ───────────────────────────────────────────────────────────
+
+  private setupKeyboard(scene: Phaser.Scene): void {
+    if (!scene.input.keyboard) return;
+    this.cursors = scene.input.keyboard.createCursorKeys();
+    this.keyA = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+    this.keyD = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+  }
+
+  private setupTouch(scene: Phaser.Scene): void {
+    scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      const midX = GAME_WIDTH / 2;
+      if (pointer.x < midX) {
+        this.touchLeft = true;
+        this.touchRight = false;
+      } else {
+        this.touchRight = true;
+        this.touchLeft = false;
+      }
+    });
+
+    scene.input.on('pointerup', () => {
+      this.touchLeft = false;
+      this.touchRight = false;
+    });
+
+    scene.input.on('pointercancel', () => {
+      this.touchLeft = false;
+      this.touchRight = false;
+    });
+  }
+
+  // ─── Landing Effect ─────────────────────────────────────────────────────────
+
+  private createLandingEffect(scene: Phaser.Scene): void {
+    const particles = scene.add.particles(0, 0, 'platform', {
+      speed: { min: 20, max: 60 },
+      angle: { min: 200, max: 340 },
+      scale: { start: 0.6, end: 0 },
+      lifespan: 300,
+      gravityY: 100,
+      quantity: 0,
+      emitting: false,
+    });
+    this.landingParticles = particles;
+  }
+
+  triggerLandingEffect(): void {
+    if (this.landingParticles) {
+      this.landingParticles.setPosition(this.x, this.y + PLAYER_SIZE_H / 2);
+      this.landingParticles.explode(5);
+    }
+  }
+
+  // ─── Update ───────────────────────────────────────────────────────────────
+
+  update(delta: number): void {
+    if (this.jumpCooldown > 0) {
+      this.jumpCooldown -= delta;
+    }
+
+    let vx = 0;
+    if (this.cursors.left.isDown || this.keyA.isDown || this.touchLeft) vx = -PLAYER_MOVE_SPEED;
+    if (this.cursors.right.isDown || this.keyD.isDown || this.touchRight) vx = PLAYER_MOVE_SPEED;
+    this.setVelocityX(vx);
+
+    // Horizontal wrap
+    if (this.x < -PLAYER_SIZE_W) {
+      this.x = GAME_WIDTH + PLAYER_SIZE_W;
+    } else if (this.x > GAME_WIDTH + PLAYER_SIZE_W) {
+      this.x = -PLAYER_SIZE_W;
+    }
+  }
+
+  // ─── Jump ─────────────────────────────────────────────────────────────────
+
+  jump(): void {
+    if (this.jumpCooldown > 0) return;
+    this.setVelocityY(PLAYER_JUMP_VELOCITY);
+    this.jumpCooldown = this.JUMP_COOLDOWN_MS;
+  }
+
+  canJumpNow(): boolean {
+    return this.jumpCooldown <= 0;
+  }
+
+  // ─── Physics Helpers ──────────────────────────────────────────────────────
+
+  isFalling(): boolean {
+    const b = this.body as Phaser.Physics.Arcade.Body;
+    return b.velocity.y > 0;
+  }
+
+  isOnGround(): boolean {
+    const b = this.body as Phaser.Physics.Arcade.Body;
+    return b.blocked.down || b.touching.down;
+  }
+
+  getVelocityY(): number {
+    const b = this.body as Phaser.Physics.Arcade.Body;
+    return b.velocity.y;
+  }
+}
