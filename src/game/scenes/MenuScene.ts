@@ -10,38 +10,32 @@ export class MenuScene extends Phaser.Scene {
   private highScore: number = 0;
   private pulseTime: number = 0;
 
-  // UI Elements - only what we need
+  // UI Elements
   private titleText!: Phaser.GameObjects.Text;
   private taglineText!: Phaser.GameObjects.Text;
-  private scoreText!: Phaser.GameObjects.Text;
+  private scoreBadge!: Phaser.GameObjects.Container;
   private playButton!: Phaser.GameObjects.Container;
+  private soundButton!: Phaser.GameObjects.Container;
   private howToPlayBtn!: Phaser.GameObjects.Text;
-  private soundBtn!: Phaser.GameObjects.Text;
   private character!: Phaser.GameObjects.Container;
   private platforms: Phaser.GameObjects.Rectangle[] = [];
 
   // Background
   private bgLayer!: Phaser.GameObjects.Graphics;
-  private accentGlow!: Phaser.GameObjects.Graphics;
 
   // Safe areas
-  private safeTop: number = 60;
-  private safeBottom: number = 40;
+  private safeTop: number = 70;
+  private safeBottom: number = 45;
 
   constructor() {
     super({ key: 'MenuScene' });
   }
 
   create(): void {
-    // Calculate safe areas
     this.calculateSafeAreas();
-
-    // Load high score
     this.highScore = parseInt(localStorage.getItem(HIGHSCORE_KEY) || '0');
 
-    // Build screen from back to front
     this.createBackground();
-    this.createAccentGlow();
     this.createPlatforms();
     this.createCharacter();
     this.createTitle();
@@ -56,84 +50,75 @@ export class MenuScene extends Phaser.Scene {
       const style = getComputedStyle(document.documentElement);
       const sat = style.getPropertyValue('--sat').trim();
       const sab = style.getPropertyValue('--sab').trim();
-      this.safeTop = sat ? parseInt(sat) + 20 : 80;
-      this.safeBottom = sab ? parseInt(sab) + 20 : 60;
+      this.safeTop = sat ? parseInt(sat) + 24 : 90;
+      this.safeBottom = sab ? parseInt(sab) + 24 : 65;
     }
   }
 
   // ─── Background ─────────────────────────────────────────────────────────────
   private createBackground(): void {
-    // Clean dark gradient
     this.bgLayer = this.add.graphics();
     this.bgLayer.fillGradientStyle(0x0a0a14, 0x0a0a14, 0x0f0f1a, 0x12121f, 1);
     this.bgLayer.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
     this.bgLayer.setDepth(-100);
-  }
 
-  // ─── Accent Glow ────────────────────────────────────────────────────────────
-  private createAccentGlow(): void {
-    // Subtle teal glow at top
-    this.accentGlow = this.add.graphics();
-    this.accentGlow.fillStyle(COLORS.platformNormal, 0.06);
-    this.accentGlow.fillEllipse(GAME_WIDTH / 2, -50, GAME_WIDTH * 1.2, 250);
-    this.accentGlow.setDepth(-99);
+    // Subtle accent glows
+    const topGlow = this.add.graphics();
+    topGlow.fillStyle(COLORS.platformNormal, 0.05);
+    topGlow.fillEllipse(GAME_WIDTH / 2, -40, GAME_WIDTH * 1.2, 200);
+    topGlow.setDepth(-99);
 
-    // Subtle pink glow at bottom
     const bottomGlow = this.add.graphics();
     bottomGlow.fillStyle(COLORS.player, 0.04);
-    bottomGlow.fillEllipse(GAME_WIDTH / 2, GAME_HEIGHT + 100, GAME_WIDTH * 1.3, 300);
+    bottomGlow.fillEllipse(GAME_WIDTH / 2, GAME_HEIGHT + 80, GAME_WIDTH * 1.3, 250);
     bottomGlow.setDepth(-99);
   }
 
-  // ─── Platforms (Simple, clean) ──────────────────────────────────────────────
+  // ─── Platforms ───────────────────────────────────────────────────────────────
   private createPlatforms(): void {
     const centerX = GAME_WIDTH / 2;
     const baseY = GAME_HEIGHT * 0.52;
 
-    // Only 3 simple platforms - clean and clear
     const positions = [
       { x: centerX, y: baseY },
-      { x: centerX - 70, y: baseY + 70 },
-      { x: centerX + 70, y: baseY + 70 },
+      { x: centerX - 65, y: baseY + 65 },
+      { x: centerX + 65, y: baseY + 65 },
     ];
 
     positions.forEach((pos) => {
-      const plat = this.add.rectangle(pos.x, pos.y, 65, 12, COLORS.platformNormal);
-      plat.setAlpha(0.5);
+      const plat = this.add.rectangle(pos.x, pos.y, 70, 14, COLORS.platformNormal);
+      plat.setAlpha(0.6);
       plat.setDepth(0);
       this.platforms.push(plat);
     });
   }
 
-  // ─── Character (Clean bounce animation) ────────────────────────────────────
+  // ─── Character ───────────────────────────────────────────────────────────────
   private createCharacter(): void {
     const centerX = GAME_WIDTH / 2;
-    const baseY = GAME_HEIGHT * 0.52 - 50;
+    const baseY = GAME_HEIGHT * 0.52 - 55;
 
-    // Character container
     this.character = this.add.container(centerX, baseY);
     this.character.setDepth(1);
 
-    // Simple circle body
-    const body = this.add.circle(0, 0, 20, COLORS.player);
+    // Larger ball (26px radius = 52px diameter)
+    const body = this.add.circle(0, 0, 26, COLORS.player);
     this.character.add(body);
 
-    // Subtle glow behind
-    const glow = this.add.circle(0, 0, 28, COLORS.playerHighlight);
-    glow.setAlpha(0.2);
+    // Subtle glow
+    const glow = this.add.circle(0, 0, 34, COLORS.playerHighlight);
+    glow.setAlpha(0.25);
     glow.setBlendMode(Phaser.BlendModes.ADD);
     this.character.add(glow);
 
-    // Start idle animation
     this.startCharacterIdle();
   }
 
   private startCharacterIdle(): void {
-    // Gentle float up and down
     this.tweens.add({
       targets: this.character,
-      y: this.character.y - 12,
-      duration: 800,
+      y: this.character.y - 14,
+      duration: 900,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
@@ -143,93 +128,102 @@ export class MenuScene extends Phaser.Scene {
   // ─── Title Block ────────────────────────────────────────────────────────────
   private createTitle(): void {
     const centerX = GAME_WIDTH / 2;
-    const titleY = this.safeTop;
+    const titleY = this.safeTop + 10;
 
-    // Main title - bold and clean
+    // Title: crisp, smaller, less stroke
     this.titleText = this.add.text(centerX, titleY, 'JumpJumpJump', {
-      fontSize: '42px',
+      fontSize: '36px',
       fontFamily: 'Russo One, sans-serif',
       color: '#ffffff',
     });
     this.titleText.setOrigin(0.5);
     this.titleText.setDepth(50);
+    this.titleText.setStroke('#4ecdc4', 2);
 
-    // Subtle glow/stroke for clarity
-    this.titleText.setStroke('#4ecdc4', 3);
-
-    // Tagline - short and strong
+    // Tagline: larger, more visible, not italic (cleaner)
     this.taglineText = this.add.text(centerX, titleY + 48, 'Jump higher. Survive longer.', {
-      fontSize: '16px',
+      fontSize: '18px',
       fontFamily: 'Exo 2, sans-serif',
-      fontStyle: 'italic',
-      color: '#8b90a5',
+      fontStyle: '600',
+      color: '#9ba3b5',
     });
     this.taglineText.setOrigin(0.5);
     this.taglineText.setDepth(50);
 
-    // High score (if exists)
+    // Score as pill badge
     if (this.highScore > 0) {
-      this.scoreText = this.add.text(centerX, titleY + 80, `Best: ${this.highScore}`, {
-        fontSize: '15px',
-        fontFamily: 'Exo 2, sans-serif',
-        fontStyle: 'italic',
-        color: '#feca57',
-      });
-      this.scoreText.setOrigin(0.5);
-      this.scoreText.setDepth(50);
+      this.createScoreBadge(centerX, titleY + 88);
     }
   }
 
-  // ─── Play Button (THE focus) ────────────────────────────────────────────────
+  private createScoreBadge(x: number, y: number): void {
+    this.scoreBadge = this.add.container(x, y);
+    this.scoreBadge.setDepth(50);
+
+    // Badge background
+    const badgeBg = this.add.graphics();
+    badgeBg.fillStyle(0xfeca57, 0.15);
+    badgeBg.fillRoundedRect(-50, -14, 100, 28, 14);
+    this.scoreBadge.add(badgeBg);
+
+    // Badge text
+    const text = this.add.text(0, 0, `Best: ${this.highScore}`, {
+      fontSize: '16px',
+      fontFamily: 'Exo 2, sans-serif',
+      fontStyle: '600',
+      color: '#feca57',
+    });
+    text.setOrigin(0.5);
+    this.scoreBadge.add(text);
+  }
+
+  // ─── Play Button ────────────────────────────────────────────────────────────
   private createPlayButton(): void {
     const centerX = GAME_WIDTH / 2;
-    const buttonY = GAME_HEIGHT * 0.75;
-    const buttonW = 200;
-    const buttonH = 64;
+    const buttonY = GAME_HEIGHT * 0.76;
+    const buttonW = 210;
+    const buttonH = 68;
 
-    // Container
     this.playButton = this.add.container(centerX, buttonY);
     this.playButton.setDepth(100);
 
-    // Glow ring (behind button - makes it pop)
+    // Glow ring
     const glowRing = this.add.graphics();
-    glowRing.fillStyle(COLORS.platformNormal, 0.12);
-    glowRing.fillRoundedRect(-buttonW / 2 - 10, -buttonH / 2 - 10, buttonW + 20, buttonH + 20, 42);
+    glowRing.fillStyle(COLORS.platformNormal, 0.1);
+    glowRing.fillRoundedRect(-buttonW / 2 - 12, -buttonH / 2 - 12, buttonW + 24, buttonH + 24, 44);
     this.playButton.add(glowRing);
 
-    // Button shadow
+    // Shadow
     const shadow = this.add.graphics();
-    shadow.fillStyle(0x000000, 0.3);
-    shadow.fillRoundedRect(-buttonW / 2 + 4, -buttonH / 2 + 6, buttonW, buttonH, 32);
+    shadow.fillStyle(0x000000, 0.35);
+    shadow.fillRoundedRect(-buttonW / 2 + 4, -buttonH / 2 + 6, buttonW, buttonH, 34);
     this.playButton.add(shadow);
 
     // Button background
     const bg = this.add.graphics();
     bg.fillStyle(COLORS.platformNormal, 1);
-    bg.fillRoundedRect(-buttonW / 2, -buttonH / 2, buttonW, buttonH, 32);
+    bg.fillRoundedRect(-buttonW / 2, -buttonH / 2, buttonW, buttonH, 34);
     this.playButton.add(bg);
 
     // Button text
     const text = this.add.text(0, 0, 'PLAY', {
-      fontSize: '28px',
+      fontSize: '30px',
       fontFamily: 'Russo One, sans-serif',
       color: '#0f0f1a',
     });
     text.setOrigin(0.5);
     this.playButton.add(text);
 
-    // Hit area (larger for easy tap)
-    const hitArea = this.add.rectangle(0, 0, buttonW + 20, buttonH + 20, 0xffffff, 0);
+    // Larger hit area
+    const hitArea = this.add.rectangle(0, 0, buttonW + 30, buttonH + 30, 0xffffff, 0);
     hitArea.setInteractive({ useHandCursor: true });
     this.playButton.add(hitArea);
 
-    // Interactions
     hitArea.on('pointerdown', () => this.onPlayDown());
     hitArea.on('pointerup', () => this.onPlayUp());
     hitArea.on('pointerover', () => this.onPlayOver());
     hitArea.on('pointerout', () => this.onPlayOut());
 
-    // Pulse animation (subtle, not distracting)
     this.startButtonPulse();
   }
 
@@ -277,34 +271,56 @@ export class MenuScene extends Phaser.Scene {
     this.startButtonPulse();
   }
 
-  // ─── Secondary Buttons (Clearly secondary) ─────────────────────────────────
+  // ─── Secondary Buttons ───────────────────────────────────────────────────────
   private createSecondaryButtons(): void {
     const bottomY = GAME_HEIGHT - this.safeBottom;
 
-    // Only two simple text buttons
-    // Sound button (left)
-    this.soundBtn = this.add.text(30, bottomY, '🔊', {
-      fontSize: '22px',
-    });
-    this.soundBtn.setOrigin(0.5);
-    this.soundBtn.setDepth(60);
-    this.soundBtn.setInteractive({ useHandCursor: true });
-    this.soundBtn.on('pointerdown', () => this.toggleSound());
-    this.soundBtn.on('pointerover', () => this.soundBtn.setAlpha(0.7));
-    this.soundBtn.on('pointerout', () => this.soundBtn.setAlpha(1));
+    // Sound button: proper icon button with background
+    this.soundButton = this.add.container(50, bottomY);
+    this.soundButton.setDepth(60);
 
-    // How to Play (right)
-    this.howToPlayBtn = this.add.text(GAME_WIDTH - 30, bottomY, 'How to Play', {
-      fontSize: '13px',
+    const soundBg = this.add.graphics();
+    soundBg.fillStyle(0xffffff, 0.08);
+    soundBg.fillCircle(0, 0, 24);
+    this.soundButton.add(soundBg);
+
+    const soundIcon = this.add.text(0, 0, '🔊', { fontSize: '22px' });
+    soundIcon.setOrigin(0.5);
+    this.soundButton.add(soundIcon);
+
+    const soundHit = this.add.rectangle(0, 0, 52, 52, 0xffffff, 0);
+    soundHit.setInteractive({ useHandCursor: true });
+    this.soundButton.add(soundHit);
+
+    soundHit.on('pointerdown', () => this.toggleSound());
+    soundHit.on('pointerover', () => soundBg.clear() || soundBg.fillStyle(0xffffff, 0.15) || soundBg.fillCircle(0, 0, 24));
+    soundHit.on('pointerout', () => soundBg.clear() || soundBg.fillStyle(0xffffff, 0.08) || soundBg.fillCircle(0, 0, 24));
+
+    // How to Play: larger, clearer with pill background
+    const htpContainer = this.add.container(GAME_WIDTH - 50, bottomY);
+    htpContainer.setDepth(60);
+
+    const htpBg = this.add.graphics();
+    htpBg.fillStyle(0xffffff, 0.08);
+    htpBg.fillRoundedRect(-62, -16, 124, 32, 16);
+    htpContainer.add(htpBg);
+
+    this.howToPlayBtn = this.add.text(0, 0, 'How to Play', {
+      fontSize: '15px',
       fontFamily: 'Exo 2, sans-serif',
-      color: '#666666',
+      fontStyle: '600',
+      color: '#8b90a5',
     });
     this.howToPlayBtn.setOrigin(0.5);
-    this.howToPlayBtn.setDepth(60);
-    this.howToPlayBtn.setInteractive({ useHandCursor: true });
-    this.howToPlayBtn.on('pointerdown', () => this.showHowToPlay());
-    this.howToPlayBtn.on('pointerover', () => this.howToPlayBtn.setColor('#ffffff'));
-    this.howToPlayBtn.on('pointerout', () => this.howToPlayBtn.setColor('#666666'));
+    htpContainer.add(this.howToPlayBtn);
+
+    const htpHit = this.add.rectangle(0, 0, 130, 36, 0xffffff, 0);
+    htpHit.setInteractive({ useHandCursor: true });
+    htpContainer.add(htpHit);
+
+    htpHit.on('pointerdown', () => this.showHowToPlay());
+    htpHit.on('pointerover', () => this.howToPlayBtn.setColor('#ffffff'));
+    htpHit.on('pointerout', () => this.howToPlayBtn.setColor('#8b90a5'));
   }
 
   // ─── Input ─────────────────────────────────────────────────────────────────
@@ -315,14 +331,10 @@ export class MenuScene extends Phaser.Scene {
 
   // ─── Game Start ─────────────────────────────────────────────────────────────
   private startGame(): void {
-    // Disable further input
     this.input.enabled = false;
-
-    // Stop animations
     this.tweens.killTweensOf(this.playButton);
     this.tweens.killTweensOf(this.character);
 
-    // Scale up and fade button
     this.tweens.add({
       targets: this.playButton,
       scaleX: 1.15,
@@ -332,7 +344,6 @@ export class MenuScene extends Phaser.Scene {
       ease: 'Quad.easeIn',
     });
 
-    // Fade other elements
     this.tweens.add({
       targets: [this.titleText, this.taglineText, this.character, this.bgLayer],
       alpha: 0,
@@ -340,9 +351,9 @@ export class MenuScene extends Phaser.Scene {
       ease: 'Quad.easeIn',
     });
 
-    if (this.scoreText) {
+    if (this.scoreBadge) {
       this.tweens.add({
-        targets: this.scoreText,
+        targets: this.scoreBadge,
         alpha: 0,
         duration: 350,
         delay: 50,
@@ -350,15 +361,13 @@ export class MenuScene extends Phaser.Scene {
       });
     }
 
-    // Fade secondary buttons faster
     this.tweens.add({
-      targets: [this.soundBtn, this.howToPlayBtn],
+      targets: [this.soundButton, this.howToPlayBtn],
       alpha: 0,
       duration: 200,
       ease: 'Quad.easeIn',
     });
 
-    // Transition
     this.cameras.main.fade(400, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.scene.start('GameScene');
@@ -367,23 +376,19 @@ export class MenuScene extends Phaser.Scene {
 
   // ─── Sound Toggle ───────────────────────────────────────────────────────────
   private toggleSound(): void {
-    // Toggle state (would need to communicate with game)
+    // State toggle would need to communicate with game
   }
 
-  // ─── How to Play Modal ─────────────────────────────────────────────────────
+  // ─── How to Play Modal ───────────────────────────────────────────────────────
   private showHowToPlay(): void {
     const overlay = this.add.rectangle(
-      GAME_WIDTH / 2,
-      GAME_HEIGHT / 2,
-      GAME_WIDTH,
-      GAME_HEIGHT,
-      0x0a0a14,
-      0.92
+      GAME_WIDTH / 2, GAME_HEIGHT / 2,
+      GAME_WIDTH, GAME_HEIGHT,
+      0x0a0a14, 0.92
     );
     overlay.setDepth(200);
     overlay.setAlpha(0);
 
-    // Panel
     const panel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2);
     panel.setDepth(201);
     panel.setScale(0.9);
@@ -391,12 +396,12 @@ export class MenuScene extends Phaser.Scene {
     // Panel background
     const panelBg = this.add.graphics();
     panelBg.fillStyle(0x12121f, 1);
-    panelBg.fillRoundedRect(-130, -130, 260, 260, 20);
+    panelBg.fillRoundedRect(-140, -140, 280, 280, 24);
     panel.add(panelBg);
 
     // Title
-    const title = this.add.text(0, -100, 'How to Play', {
-      fontSize: '24px',
+    const title = this.add.text(0, -105, 'How to Play', {
+      fontSize: '26px',
       fontFamily: 'Russo One, sans-serif',
       color: '#ffffff',
     });
@@ -404,19 +409,19 @@ export class MenuScene extends Phaser.Scene {
     panel.add(title);
 
     // Instructions
-    const inst = this.add.text(0, -40, 'Tap LEFT or RIGHT\nto move\n\nJump on platforms\nto climb higher\n\nDon\'t fall!', {
-      fontSize: '14px',
+    const inst = this.add.text(0, -35, 'Tap LEFT or RIGHT\nto move\n\nJump on platforms\nto climb higher\n\nDon\'t fall!', {
+      fontSize: '16px',
       fontFamily: 'Exo 2, sans-serif',
-      color: '#8b90a5',
+      color: '#9ba3b5',
       align: 'center',
-      lineSpacing: 6,
+      lineSpacing: 8,
     });
     inst.setOrigin(0.5);
     panel.add(inst);
 
     // Close button
-    const closeBtn = this.add.text(0, 80, 'Got it!', {
-      fontSize: '16px',
+    const closeBtn = this.add.text(0, 90, 'Got it!', {
+      fontSize: '18px',
       fontFamily: 'Russo One, sans-serif',
       color: '#4ecdc4',
     });
@@ -438,19 +443,8 @@ export class MenuScene extends Phaser.Scene {
       });
     });
 
-    // Animate in
-    this.tweens.add({
-      targets: overlay,
-      alpha: 1,
-      duration: 200,
-      ease: 'Quad.easeOut',
-    });
-    this.tweens.add({
-      targets: panel,
-      scale: 1,
-      duration: 300,
-      ease: 'Back.easeOut',
-    });
+    this.tweens.add({ targets: overlay, alpha: 1, duration: 200, ease: 'Quad.easeOut' });
+    this.tweens.add({ targets: panel, scale: 1, duration: 300, ease: 'Back.easeOut' });
   }
 
   // ─── Update ─────────────────────────────────────────────────────────────────
