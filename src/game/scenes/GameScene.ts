@@ -404,7 +404,9 @@ export class GameScene extends Phaser.Scene {
 
   // ─── Pause Control ─────────────────────────────────────────────────────────
   public setPaused(paused: boolean): void {
+    console.log('[PAUSE] setPaused called:', paused);
     this.isPaused = paused;
+    console.log('[PAUSE] isPaused set to:', this.isPaused);
   }
 
   public isPausedState(): boolean {
@@ -419,7 +421,10 @@ export class GameScene extends Phaser.Scene {
     }
 
     // Skip game logic if paused
-    if (this.isPaused) return;
+    if (this.isPaused) {
+      if (Math.random() < 0.01) console.log('[PAUSE] update: isPaused is TRUE, skipping game logic');
+      return;
+    }
 
     // Skip if game over
     if (this.isGameOver) return;
