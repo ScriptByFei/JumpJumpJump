@@ -118,15 +118,16 @@ export class MenuScene extends Phaser.Scene {
     this.titleText.setOrigin(0.5);
     this.titleText.setDepth(50);
 
-    // Tagline: LARGE, HIGH CONTRAST, CLEAR
+    // Tagline: LARGE, HIGH CONTRAST, CLEAR - no effects
     this.taglineText = this.add.text(centerX, titleY + 55, 'Jump higher. Survive longer.', {
-      fontSize: '20px',
+      fontSize: '24px',
       fontFamily: 'Exo 2, sans-serif',
       fontStyle: '600',
-      color: '#c5cbd8',
+      color: '#ffffff',
     });
     this.taglineText.setOrigin(0.5);
     this.taglineText.setDepth(50);
+    this.taglineText.setAlpha(1);
 
     if (this.highScore > 0) {
       this.createScoreBadge(centerX, titleY + 95);
