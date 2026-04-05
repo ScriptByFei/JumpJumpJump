@@ -404,7 +404,9 @@ export class GameScene extends Phaser.Scene {
 
   // ─── Pause Control ─────────────────────────────────────────────────────────
   public setPaused(paused: boolean): void {
-    this.isPaused = paused;
+    // Use Phaser's time.timeScale to freeze/unfreeze the game
+    // This is the proper Phaser way to pause without breaking input
+    this.time.timeScale = paused ? 0 : 1;
   }
 
   public isPausedState(): boolean {
@@ -413,15 +415,12 @@ export class GameScene extends Phaser.Scene {
 
   // ─── Update ─────────────────────────────────────────────────────────────────
   update(_time: number, _delta: number): void {
-    // Always update player so controls work
+    // Update player
     if (this.player) {
       this.player.update(_time, _delta);
     }
 
-    // Skip game logic if paused
-    if (this.isPaused) return;
-
-    // Skip if game over
+    // Skip game logic if game over
     if (this.isGameOver) return;
 
     // Update platforms
