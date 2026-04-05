@@ -380,26 +380,27 @@
         position: fixed;
         top: calc(16px + var(--safe-top));
         right: 16px;
-        width: 40px;
-        height: 40px;
-        background: rgba(0, 0, 0, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        background: rgba(18, 18, 31, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
         color: white;
-        font-size: 16px;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
         z-index: 1001;
-        display: none;
         -webkit-appearance: none;
         appearance: none;
         outline: none;
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
       }
       
       .pause-btn:active {
-        background: rgba(0, 0, 0, 0.7);
-        transform: scale(0.95);
+        background: rgba(18, 18, 31, 0.95);
+        transform: scale(0.96);
       }
     </style>
   </head>
