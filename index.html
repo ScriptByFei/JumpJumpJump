@@ -642,27 +642,17 @@
       
       // Toggle pause - only pauses, overlay handles resume
       function togglePause() {
-        console.log('[HTML] togglePause called');
         isPaused = true;
-        console.log('[HTML] window.setGamePaused type:', typeof window.setGamePaused);
         if (typeof window.setGamePaused === 'function') {
-          console.log('[HTML] Calling window.setGamePaused(true)');
           window.setGamePaused(true);
-        } else {
-          console.log('[HTML] window.setGamePaused is NOT a function!');
         }
       }
       
       // Resume from pause menu
       function resumeGame() {
-        console.log('[HTML] resumeGame called');
         isPaused = false;
-        console.log('[HTML] window.setGamePaused type:', typeof window.setGamePaused);
         if (typeof window.setGamePaused === 'function') {
-          console.log('[HTML] Calling window.setGamePaused(false)');
           window.setGamePaused(false);
-        } else {
-          console.log('[HTML] window.setGamePaused is NOT a function!');
         }
       }
       
