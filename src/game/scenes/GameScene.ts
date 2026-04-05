@@ -134,8 +134,8 @@ export class GameScene extends Phaser.Scene {
   private lastLandTime: number = 0;
   private comboTimeout: number = 2000; // ms to maintain combo
 
-  // Pause state
-  private isPaused: boolean = false;
+  // Pause state - kept for reference but not used with Phaser scene.pause()
+  // private isPaused: boolean = false;
 
   // Camera
   private cameraShakeTween?: Phaser.Tweens.Tween;
@@ -155,7 +155,7 @@ export class GameScene extends Phaser.Scene {
     console.log('GameScene: create() called');
     
     this.isGameOver = false;
-    this.isPaused = false; // Reset pause state
+    // isPaused handled by Phaser's scene.pause()/resume()
     this.score = 0;
     this.startY = GAME_HEIGHT - 100;
     this.maxHeight = 0;
@@ -404,18 +404,21 @@ export class GameScene extends Phaser.Scene {
 
   // ─── Pause Control ─────────────────────────────────────────────────────────
   public setPaused(paused: boolean): void {
-    this.isPaused = paused;
-    
-    // Just update the flag - isPaused check in update() handles everything else
-    // No need to disable physics body, the early return prevents all updates
+    if (paused) {
+      // Use Phaser's scene pause - this properly freezes the scene
+      this.scene.pause();
+    } else {
+      // Resume the scene
+      this.scene.resume();
+    }
   }
 
   // ─── Update ─────────────────────────────────────────────────────────────────
   update(_time: number, _delta: number): void {
-    // Check pause state first
-    if (this.isGameOver || this.isPaused) return;
+    // Don't update if game is over
+    if (this.isGameOver) return;
     
-    // Then update player
+    // Update player
     if (this.player) {
       this.player.update(_time, _delta);
     }
