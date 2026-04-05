@@ -14,6 +14,7 @@ let gameInstance: Phaser.Game | null = null;
 declare global {
   interface Window {
     setGamePaused: (paused: boolean) => void;
+    restartGame: () => void;
   }
 }
 
@@ -68,6 +69,21 @@ window.setGamePaused = function(paused: boolean) {
         console.log('Paused scene:', scene.scene.key);
       }
     }
+  }
+};
+
+// Restart game - exposed globally for HTML button
+window.restartGame = function() {
+  console.log('restartGame called');
+  if (gameInstance) {
+    gameInstance.destroy(true);
+    gameInstance = null;
+  }
+  // Re-create game
+  const container = document.getElementById('game-container');
+  if (container) {
+    container.style.display = 'block';
+    gameInstance = new Phaser.Game(config);
   }
 };
 

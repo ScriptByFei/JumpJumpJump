@@ -405,7 +405,7 @@
         transform: scale(0.95);
       }
     </style>
-    <script type="module" crossorigin src="./assets/index-B-to62eU.js"></script>
+    <script type="module" crossorigin src="./assets/index-BVbpAinU.js"></script>
   <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
   <body>
     <!-- Landing Page -->
@@ -484,6 +484,15 @@
       </footer>
     </main>
     
+    <!-- Pause Overlay -->
+    <div id="pause-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; flex-direction: column;">
+      <div style="text-align: center;">
+        <div style="font-family: 'Russo One', Arial, sans-serif; font-size: 48px; color: white; margin-bottom: 40px;">PAUSED</div>
+        <button id="resume-btn" style="display: block; width: 200px; height: 56px; background: linear-gradient(135deg, #4ecdc4, #44a08d); border: none; border-radius: 12px; color: white; font-family: 'Exo 2', Arial, sans-serif; font-size: 18px; font-weight: 600; cursor: pointer; margin: 0 auto 16px; box-shadow: 0 4px 15px rgba(78,205,196,0.3);">RESUME</button>
+        <button id="restart-btn" style="display: block; width: 200px; height: 56px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-family: 'Exo 2', Arial, sans-serif; font-size: 18px; font-weight: 600; cursor: pointer; margin: 0 auto;">RESTART</button>
+      </div>
+    </div>
+
     <!-- Game Container -->
     <div id="game-container"></div>
     <button class="pause-btn" id="pause-btn">⏸</button>
@@ -493,6 +502,9 @@
       const playBtn = document.getElementById('play-btn');
       const finalPlayBtn = document.getElementById('final-play-btn');
       const pauseBtn = document.getElementById('pause-btn');
+      const pauseOverlay = document.getElementById('pause-overlay');
+      const resumeBtn = document.getElementById('resume-btn');
+      const restartBtn = document.getElementById('restart-btn');
       const landing = document.getElementById('landing');
       const gameContainer = document.getElementById('game-container');
       
@@ -504,20 +516,46 @@
         pauseBtn.style.display = 'flex';
         isPaused = false;
         pauseBtn.textContent = '⏸';
+        pauseOverlay.style.display = 'none';
         window.dispatchEvent(new CustomEvent('startGame'));
       }
       
       function togglePause() {
         isPaused = !isPaused;
         pauseBtn.textContent = isPaused ? '▶' : '⏸';
+        
+        if (isPaused) {
+          pauseOverlay.style.display = 'flex';
+        } else {
+          pauseOverlay.style.display = 'none';
+        }
+        
         // Call exposed function directly
         if (typeof window.setGamePaused === 'function') {
           window.setGamePaused(isPaused);
         }
       }
       
+      function resumeGame() {
+        if (isPaused) {
+          togglePause();
+        }
+      }
+      
+      function restartGame() {
+        pauseOverlay.style.display = 'none';
+        isPaused = false;
+        pauseBtn.textContent = '⏸';
+        pauseBtn.style.display = 'none';
+        if (typeof window.restartGame === 'function') {
+          window.restartGame();
+        }
+      }
+      
       playBtn.addEventListener('click', startGame);
       finalPlayBtn.addEventListener('click', startGame);
+      resumeBtn.addEventListener('click', resumeGame);
+      restartBtn.addEventListener('click', restartGame);
       
       // Pause button with both click and touch support for mobile
       pauseBtn.addEventListener('click', togglePause);
