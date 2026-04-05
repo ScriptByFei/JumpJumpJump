@@ -23,9 +23,9 @@ export class BootScene extends Phaser.Scene {
     this.createParticleTextures();
     this.createButtonTextures();
     
-    // Transition to menu after short delay
+    // Transition to game after textures are ready
     this.time.delayedCall(100, () => {
-      this.scene.start('MenuScene');
+      this.scene.start('GameScene');
     });
   }
 

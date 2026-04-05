@@ -36,18 +36,15 @@ const config: Phaser.Types.Core.GameConfig = {
   },
 };
 
-// Game instance
-let game: Phaser.Game | null = null;
-
-// Start game function
+// Start game when requested from landing page
 function startGame() {
-  if (game) {
-    game.destroy(true);
+  console.log('Start game event received');
+  const container = document.getElementById('game-container');
+  if (container) {
+    container.style.display = 'block';
+    new Phaser.Game(config);
   }
-  game = new Phaser.Game(config);
 }
 
 // Listen for startGame event from landing page
 window.addEventListener('startGame', startGame);
-
-// Don't auto-start - landing page controls when to start
