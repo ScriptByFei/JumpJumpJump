@@ -133,14 +133,9 @@ export class GameScene extends Phaser.Scene {
   private comboMultiplier: number = 1;
   private lastLandTime: number = 0;
   private comboTimeout: number = 2000; // ms to maintain combo
-  private comboText!: Phaser.GameObjects.Text;
 
   // Pause state
   private isPaused: boolean = false;
-
-  // UI
-  private scoreText!: Phaser.GameObjects.Text;
-  private highScoreText!: Phaser.GameObjects.Text;
 
   // Camera
   private cameraShakeTween?: Phaser.Tweens.Tween;
@@ -255,74 +250,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   // ─── UI ─────────────────────────────────────────────────────────────────────
+  // Note: Score, combo, and best score are now handled by HTML HUD (index.html)
+  // This method only creates the touch hint
   private createUI(): void {
-    const padding = 16;
-    const safeTop = this.getSafeAreaTop();
-    const safeLeft = this.getSafeAreaLeft();
-    const topOffset = safeTop + padding;
-
-    // ─── Left HUD Block: Score + Combo ───────────────────────────────────────
-    
-    // Score - 44px, clear and balanced
-    this.scoreText = this.add.text(safeLeft + padding, topOffset, '0', {
-      fontSize: '44px',
-      fontFamily: 'Russo One, Arial Black, sans-serif',
-      color: '#ffffff',
-    });
-    this.scoreText.setOrigin(0, 0);
-    this.scoreText.setDepth(1000);
-
-    // Combo - "COMBO ×13" in accent color, 26px, clear and prominent
-    this.comboText = this.add.text(safeLeft + padding, topOffset + 50, '', {
-      fontSize: '26px',
-      fontFamily: 'Russo One, Arial, sans-serif',
-      color: '#4ecdc4',
-    });
-    this.comboText.setOrigin(0, 0);
-    this.comboText.setDepth(1000);
-    this.comboText.setAlpha(0);
-
-    // Store combo base Y for camera following
-    (this as any).comboBaseY = topOffset + 50;
-
-    // ─── Right HUD Block: Pause Button + Best Score Badge ─────────────────────
-    
-    // Pause button positioned via HTML overlay (top right)
-    // Best Score Badge - premium compact panel aligned with pause button
-
-    // Best badge container
-    const bestContainer = this.add.container(GAME_WIDTH - padding, topOffset);
-    bestContainer.setDepth(1000);
-
-    // Best badge background - centered, same style as pause button
-    const bestBg = this.add.graphics();
-    bestBg.fillStyle(0x000000, 0.4);
-    bestBg.fillRoundedRect(-64, 0, 128, 64, 12);
-    bestContainer.add(bestBg);
-
-    // BEST label - uppercase, centered
-    const bestLabel = this.add.text(0, 10, 'BEST', {
-      fontSize: '11px',
-      fontFamily: 'Exo 2, Arial, sans-serif',
-      fontStyle: '700',
-      color: '#9ba3b5',
-    });
-    bestLabel.setOrigin(0.5, 0);
-    bestContainer.add(bestLabel);
-
-    // Best value - clean number, centered, no prefix
-    this.highScoreText = this.add.text(0, 28, this.highScore.toString(), {
-      fontSize: '24px',
-      fontFamily: 'Russo One, Arial, sans-serif',
-      color: '#feca57',
-    });
-    this.highScoreText.setOrigin(0.5, 0);
-    bestContainer.add(this.highScoreText);
-
-    // Store reference for camera following
-    (this as any).bestContainer = bestContainer;
-
-    // Touch controls hint
     this.createTouchHint();
   }
 
@@ -368,18 +298,6 @@ export class GameScene extends Phaser.Scene {
     const style = getComputedStyle(document.documentElement);
     const sab = style.getPropertyValue('--sab').trim();
     return sab ? parseInt(sab) : 34;
-  }
-
-  private getSafeAreaTop(): number {
-    const style = getComputedStyle(document.documentElement);
-    const sat = style.getPropertyValue('--sat').trim();
-    return sat ? parseInt(sat) : 44;
-  }
-
-  private getSafeAreaLeft(): number {
-    const style = getComputedStyle(document.documentElement);
-    const sal = style.getPropertyValue('--sal').trim();
-    return sal ? parseInt(sal) : 0;
   }
 
   // ─── Platforms ───────────────────────────────────────────────────────────────
@@ -519,9 +437,6 @@ export class GameScene extends Phaser.Scene {
     // Platform management
     this.managePlatforms();
 
-    // Update UI position
-    this.updateUIPosition();
-
     // Parallax stars
     this.updateStars();
 
@@ -586,12 +501,14 @@ export class GameScene extends Phaser.Scene {
     if (!isHigher && this.combo > 0) {
       this.combo = 0;
       this.comboMultiplier = 1;
-      this.comboText.setAlpha(0);
+      // Combo display handled by HTML HUD
     }
     this.lastLandTime = currentTime;
 
-    // Update combo display
-    this.updateComboDisplay();
+    // Update combo display (HTML HUD)
+    window.dispatchEvent(new CustomEvent('updateHUD', {
+      detail: { combo: this.combo }
+    }));
 
     // Sound effects
     this.soundManager.playLand();
@@ -673,34 +590,11 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.flash(100, 168, 85, 247, false);
   }
 
-  private updateComboDisplay(): void {
-    if (this.combo >= 1) {
-      this.comboText.setText(`COMBO ×${this.combo}`);
-      this.comboText.setAlpha(1);
-      
-      // Update HTML HUD
-      window.dispatchEvent(new CustomEvent('updateHUD', {
-        detail: { combo: this.combo }
-      }));
-      // Subtle pulse animation
-      this.tweens.add({
-        targets: this.comboText,
-        scaleX: 1.06,
-        scaleY: 1.06,
-        duration: 150,
-        yoyo: true,
-        ease: 'Quad.easeOut',
-      });
-    } else {
-      this.comboText.setAlpha(0);
-    }
-  }
-
   private checkComboTimeout(_time: number): void {
     if (this.combo > 0 && this.time.now - this.lastLandTime > this.comboTimeout) {
       this.combo = 0;
       this.comboMultiplier = 1;
-      this.comboText.setAlpha(0);
+      // Combo display handled by HTML HUD
     }
   }
 
@@ -796,31 +690,15 @@ export class GameScene extends Phaser.Scene {
     if (newScore !== this.score) {
       const oldScore = this.score;
       this.score = newScore;
-      this.scoreText.setText(this.score.toString());
 
       // Update HTML HUD
       window.dispatchEvent(new CustomEvent('updateHUD', {
         detail: { score: this.score }
       }));
 
-      // Scale animation on score change
-      this.tweens.add({
-        targets: this.scoreText,
-        scale: 1.2,
-        duration: 100,
-        yoyo: true,
-        ease: 'Cubic.easeOut',
-      });
-
       // Milestone celebration every 1000 points
       if (this.score > 0 && Math.floor(this.score / 1000) > Math.floor(oldScore / 1000)) {
         this.celebrateMilestone(this.score);
-      }
-
-      // Flash effect when beating high score
-      if (this.score > this.highScore && this.score > 0) {
-        this.highScoreText.setText(this.score.toString());
-        this.highScoreText.setColor('#' + COLORS.highscoreText.toString(16).padStart(6, '0'));
       }
     }
   }
@@ -856,15 +734,6 @@ export class GameScene extends Phaser.Scene {
           ease: 'Quad.easeOut',
         });
       }
-    });
-
-    // Score text pop
-    this.tweens.add({
-      targets: this.scoreText,
-      scale: 1.2,
-      duration: 100,
-      yoyo: true,
-      ease: 'Quad.easeOut',
     });
 
     // Animate and remove
@@ -918,27 +787,6 @@ export class GameScene extends Phaser.Scene {
       }
       return true;
     });
-  }
-
-  // ─── UI Updates ─────────────────────────────────────────────────────────────
-  private updateUIPosition(): void {
-    const cameraTop = this.cameras.main.scrollY;
-    const safeTop = this.getSafeAreaTop();
-    const padding = 16;
-    
-    // Score follows camera up
-    const minY = Math.min(cameraTop + safeTop + padding, this.scoreText.y);
-    this.scoreText.setY(minY);
-    
-    // Combo follows score
-    if ((this as any).comboBaseY !== undefined) {
-      this.comboText.setY(minY + 50);
-    }
-    
-    // Best badge follows camera up
-    if ((this as any).bestContainer) {
-      (this as any).bestContainer.setY(minY);
-    }
   }
 
   // ─── Visual Effects ─────────────────────────────────────────────────────────
