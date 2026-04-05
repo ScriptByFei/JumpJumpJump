@@ -179,6 +179,10 @@ export class GameScene extends Phaser.Scene {
         best: this.highScore
       }
     }));
+    
+    // Show HUD when game starts
+    const hudTop = document.getElementById('hud-top');
+    if (hudTop) hudTop.style.display = 'flex';
 
     // Background
     this.createBackground();
@@ -483,7 +487,13 @@ export class GameScene extends Phaser.Scene {
   // ─── Pause Control ─────────────────────────────────────────────────────────
   public setPaused(paused: boolean): void {
     this.isPaused = paused;
-    console.log('GameScene.setPaused:', paused);
+    
+    // Also pause/unpause the physics world
+    if (paused) {
+      this.physics.pause();
+    } else {
+      this.physics.resume();
+    }
   }
 
   // ─── Update ─────────────────────────────────────────────────────────────────
@@ -733,6 +743,12 @@ export class GameScene extends Phaser.Scene {
   private triggerGameOver(): void {
     if (this.isGameOver) return;
     this.isGameOver = true;
+
+    // Hide HTML pause overlay and HUD when game ends
+    const pauseOverlay = document.getElementById('pause-overlay');
+    const hudTop = document.getElementById('hud-top');
+    if (pauseOverlay) pauseOverlay.style.display = 'none';
+    if (hudTop) hudTop.style.display = 'none';
 
     // Save high score
     if (this.score > this.highScore) {
