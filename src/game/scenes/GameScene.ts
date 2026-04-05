@@ -416,12 +416,15 @@ export class GameScene extends Phaser.Scene {
       // Pause all tweens
       this.tweens.pauseAll();
     } else {
-      // Resume player physics
+      // Resume - trigger one update to sync state
       if (this.player && this.player.body) {
+        // Enable physics and set initial velocity
         this.player.body.enable = true;
         this.player.body.velocity.x = 0;
         this.player.body.velocity.y = 0;
-        this.player.body.reset(this.player.x, this.player.y);
+        
+        // Force the player to update its input state once
+        this.player.update(0, 0);
       }
       // Resume all tweens
       this.tweens.resumeAll();
