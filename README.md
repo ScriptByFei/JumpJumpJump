@@ -71,3 +71,4 @@ The structure is set up for easy expansion:
 - [Phaser 3](https://phaser.io/) — game framework
 - [Vite](https://vitejs.dev/) — build tool
 - [TypeScript](https://www.typescriptlang.org/) — type safety
+# Sun Apr  5 11:38:50 CEST 2026
