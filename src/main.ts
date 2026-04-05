@@ -60,39 +60,37 @@ function startGame() {
 
 // Set pause state - exposed globally for HTML button
 window.setGamePaused = function(paused: boolean) {
-  console.log('setGamePaused called:', paused);
-  console.log('gameInstance:', !!gameInstance);
+  if (!gameInstance) return;
   
-  if (!gameInstance) {
-    console.log('ERROR: No game instance');
-    return;
-  }
-  
-  // Find GameScene specifically and pause it
+  // Find GameScene and pause/unpause it
   const gameScene = gameInstance.scene.getScene('GameScene') as any;
-  console.log('GameScene:', gameScene);
-  
   if (gameScene && typeof gameScene.setPaused === 'function') {
     gameScene.setPaused(paused);
-    console.log('SUCCESS: GameScene paused =', paused);
-  } else {
-    console.log('ERROR: GameScene not found or setPaused not available');
-    console.log('Available scenes:', gameInstance.scene.scenes.map((s: any) => s.scene.key));
+  }
+  
+  // Show/hide HTML pause overlay
+  const overlay = document.getElementById('pause-overlay');
+  const pauseBtn = document.getElementById('pause-btn');
+  if (overlay) {
+    overlay.style.display = paused ? 'flex' : 'none';
+  }
+  if (pauseBtn) {
+    pauseBtn.textContent = paused ? '▶' : '⏸';
   }
 };
 
 // Restart game - exposed globally for HTML button
 window.restartGame = function() {
-  console.log('restartGame called');
-  if (gameInstance) {
-    gameInstance.destroy(true);
-    gameInstance = null;
-  }
-  // Re-create game
-  const container = document.getElementById('game-container');
-  if (container) {
-    container.style.display = 'block';
-    gameInstance = new Phaser.Game(config);
+  if (!gameInstance) return;
+  
+  // Hide overlay
+  const overlay = document.getElementById('pause-overlay');
+  if (overlay) overlay.style.display = 'none';
+  
+  // Get GameScene and restart it
+  const gameScene = gameInstance.scene.getScene('GameScene') as any;
+  if (gameScene) {
+    gameScene.scene.restart();
   }
 };
 

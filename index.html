@@ -502,63 +502,46 @@
       const playBtn = document.getElementById('play-btn');
       const finalPlayBtn = document.getElementById('final-play-btn');
       const pauseBtn = document.getElementById('pause-btn');
-      const pauseOverlay = document.getElementById('pause-overlay');
-      const resumeBtn = document.getElementById('resume-btn');
-      const restartBtn = document.getElementById('restart-btn');
       const landing = document.getElementById('landing');
       const gameContainer = document.getElementById('game-container');
-      
-      let isPaused = false;
       
       function startGame() {
         landing.style.display = 'none';
         gameContainer.style.display = 'block';
         pauseBtn.style.display = 'flex';
-        isPaused = false;
-        pauseBtn.textContent = '⏸';
-        pauseOverlay.style.display = 'none';
         window.dispatchEvent(new CustomEvent('startGame'));
       }
       
+      // Simple pause toggle
       function togglePause() {
-        isPaused = !isPaused;
-        pauseBtn.textContent = isPaused ? '▶' : '⏸';
-        
-        if (isPaused) {
-          pauseOverlay.style.display = 'flex';
-        } else {
-          pauseOverlay.style.display = 'none';
-        }
-        
-        // Call exposed function directly
-        console.log('togglePause calling setGamePaused:', isPaused, typeof window.setGamePaused);
         if (typeof window.setGamePaused === 'function') {
-          window.setGamePaused(isPaused);
-        } else {
-          console.log('WARNING: window.setGamePaused not found!');
+          window.setGamePaused(true);
         }
       }
       
+      // Resume from pause menu
       function resumeGame() {
-        if (isPaused) {
-          togglePause();
+        if (typeof window.setGamePaused === 'function') {
+          window.setGamePaused(false);
         }
       }
       
+      // Restart from pause menu
       function restartGame() {
-        pauseOverlay.style.display = 'none';
-        isPaused = false;
-        pauseBtn.textContent = '⏸';
-        pauseBtn.style.display = 'none';
         if (typeof window.restartGame === 'function') {
           window.restartGame();
         }
+        pauseBtn.style.display = 'flex';
       }
       
       playBtn.addEventListener('click', startGame);
       finalPlayBtn.addEventListener('click', startGame);
-      resumeBtn.addEventListener('click', resumeGame);
-      restartBtn.addEventListener('click', restartGame);
+      
+      // Resume button
+      const resumeBtn = document.getElementById('resume-btn');
+      const restartBtn = document.getElementById('restart-btn');
+      if (resumeBtn) resumeBtn.addEventListener('click', resumeGame);
+      if (restartBtn) restartBtn.addEventListener('click', restartGame);
       
       // Pause button with both click and touch support for mobile
       pauseBtn.addEventListener('click', togglePause);
