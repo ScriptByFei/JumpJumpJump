@@ -434,39 +434,6 @@
         flex-shrink: 0;
       }
       
-      /* Pause button - glass style */
-      .hud-pause {
-        width: 44px;
-        height: 44px;
-        background: rgba(20, 20, 30, 0.6);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 12px;
-        color: #ffffff;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        pointer-events: auto;
-        -webkit-appearance: none;
-        appearance: none;
-        outline: none;
-        box-shadow: 
-          0 4px 12px rgba(0, 0, 0, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        touch-action: manipulation;
-        -webkit-tap-highlight-color: transparent;
-        flex-shrink: 0;
-        transition: transform 0.1s ease, background 0.1s ease;
-      }
-      
-      .hud-pause:active {
-        transform: scale(0.92);
-        background: rgba(40, 40, 50, 0.7);
-      }
-      
       /* Best score card */
       .hud-best {
         display: flex;
@@ -580,15 +547,6 @@
         </div>
       </footer>
     </main>
-    
-    <!-- Pause Overlay -->
-    <div id="pause-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; flex-direction: column;">
-      <div style="text-align: center;">
-        <div style="font-family: 'Russo One', Arial, sans-serif; font-size: 48px; color: white; margin-bottom: 40px;">PAUSED</div>
-        <button id="resume-btn" style="display: block; width: 200px; height: 56px; background: linear-gradient(135deg, #4ecdc4, #44a08d); border: none; border-radius: 12px; color: white; font-family: 'Exo 2', Arial, sans-serif; font-size: 18px; font-weight: 600; cursor: pointer; margin: 0 auto 16px; box-shadow: 0 4px 15px rgba(78,205,196,0.3);">RESUME</button>
-        <button id="restart-btn" style="display: block; width: 200px; height: 56px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; font-family: 'Exo 2', Arial, sans-serif; font-size: 18px; font-weight: 600; cursor: pointer; margin: 0 auto;">RESTART</button>
-      </div>
-    </div>
 
     <!-- Game HUD -->
     <div class="game-hud" id="game-hud" style="display: none;">
@@ -598,7 +556,6 @@
           <div class="hud-score" id="hud-score">0</div>
         </div>
         <div class="hud-controls">
-          <button class="hud-pause" id="hud-pause" aria-label="Pause">II</button>
           <div class="hud-best">
             <div class="hud-best__label">BEST</div>
             <div class="hud-best__value" id="hud-best">0</div>
@@ -620,7 +577,6 @@
     <script>
       const playBtn = document.getElementById('play-btn');
       const finalPlayBtn = document.getElementById('final-play-btn');
-      const hudPause = document.getElementById('hud-pause');
       const gameHud = document.getElementById('game-hud');
       const hudScore = document.getElementById('hud-score');
       const hudCombo = document.getElementById('hud-combo');
@@ -628,7 +584,6 @@
       const landing = document.getElementById('landing');
       const gameContainer = document.getElementById('game-container');
       
-      let isPaused = false;
       let currentScore = 0;
       let currentBest = 0;
       
@@ -636,29 +591,11 @@
         landing.style.display = 'none';
         gameContainer.style.display = 'block';
         gameHud.style.display = 'block';
-        isPaused = false;
         window.dispatchEvent(new CustomEvent('startGame'));
       }
       
-      // Toggle pause - only pauses, overlay handles resume
-      function togglePause() {
-        isPaused = true;
-        if (typeof window.setGamePaused === 'function') {
-          window.setGamePaused(true);
-        }
-      }
-      
-      // Resume from pause menu
-      function resumeGame() {
-        isPaused = false;
-        if (typeof window.setGamePaused === 'function') {
-          window.setGamePaused(false);
-        }
-      }
-      
-      // Restart from pause menu
+      // Restart game
       function restartGame() {
-        isPaused = false;
         if (typeof window.restartGame === 'function') {
           window.restartGame();
         }
@@ -704,19 +641,6 @@
       
       playBtn.addEventListener('click', startGame);
       finalPlayBtn.addEventListener('click', startGame);
-      
-      // Resume button
-      const resumeBtn = document.getElementById('resume-btn');
-      const restartBtn = document.getElementById('restart-btn');
-      if (resumeBtn) resumeBtn.addEventListener('click', resumeGame);
-      if (restartBtn) restartBtn.addEventListener('click', restartGame);
-      
-      // Pause button
-      hudPause.addEventListener('click', togglePause);
-      hudPause.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        togglePause();
-      });
     </script>
   </body>
 </html>
