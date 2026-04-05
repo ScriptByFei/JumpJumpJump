@@ -147,20 +147,21 @@ export class MenuScene extends Phaser.Scene {
 
     // Main title - bold and clean
     this.titleText = this.add.text(centerX, titleY, 'JumpJumpJump', {
-      fontSize: '38px',
-      fontFamily: 'Arial Black, Arial, sans-serif',
+      fontSize: '42px',
+      fontFamily: 'Russo One, sans-serif',
       color: '#ffffff',
     });
     this.titleText.setOrigin(0.5);
     this.titleText.setDepth(50);
 
-    // Subtle stroke for clarity
-    this.titleText.setStroke('#4ecdc4', 2);
+    // Subtle glow/stroke for clarity
+    this.titleText.setStroke('#4ecdc4', 3);
 
     // Tagline - short and strong
-    this.taglineText = this.add.text(centerX, titleY + 40, 'Jump higher. Survive longer.', {
-      fontSize: '14px',
-      fontFamily: 'Arial, sans-serif',
+    this.taglineText = this.add.text(centerX, titleY + 48, 'Jump higher. Survive longer.', {
+      fontSize: '16px',
+      fontFamily: 'Exo 2, sans-serif',
+      fontStyle: 'italic',
       color: '#8b90a5',
     });
     this.taglineText.setOrigin(0.5);
@@ -168,9 +169,10 @@ export class MenuScene extends Phaser.Scene {
 
     // High score (if exists)
     if (this.highScore > 0) {
-      this.scoreText = this.add.text(centerX, titleY + 65, `Best: ${this.highScore}`, {
-        fontSize: '14px',
-        fontFamily: 'Arial, sans-serif',
+      this.scoreText = this.add.text(centerX, titleY + 80, `Best: ${this.highScore}`, {
+        fontSize: '15px',
+        fontFamily: 'Exo 2, sans-serif',
+        fontStyle: 'italic',
         color: '#feca57',
       });
       this.scoreText.setOrigin(0.5);
@@ -209,8 +211,8 @@ export class MenuScene extends Phaser.Scene {
 
     // Button text
     const text = this.add.text(0, 0, 'PLAY', {
-      fontSize: '26px',
-      fontFamily: 'Arial Black, Arial, sans-serif',
+      fontSize: '28px',
+      fontFamily: 'Russo One, sans-serif',
       color: '#0f0f1a',
     });
     text.setOrigin(0.5);
@@ -294,7 +296,7 @@ export class MenuScene extends Phaser.Scene {
     // How to Play (right)
     this.howToPlayBtn = this.add.text(GAME_WIDTH - 30, bottomY, 'How to Play', {
       fontSize: '13px',
-      fontFamily: 'Arial, sans-serif',
+      fontFamily: 'Exo 2, sans-serif',
       color: '#666666',
     });
     this.howToPlayBtn.setOrigin(0.5);
@@ -394,8 +396,8 @@ export class MenuScene extends Phaser.Scene {
 
     // Title
     const title = this.add.text(0, -100, 'How to Play', {
-      fontSize: '22px',
-      fontFamily: 'Arial Black, Arial, sans-serif',
+      fontSize: '24px',
+      fontFamily: 'Russo One, sans-serif',
       color: '#ffffff',
     });
     title.setOrigin(0.5);
@@ -404,7 +406,7 @@ export class MenuScene extends Phaser.Scene {
     // Instructions
     const inst = this.add.text(0, -40, 'Tap LEFT or RIGHT\nto move\n\nJump on platforms\nto climb higher\n\nDon\'t fall!', {
       fontSize: '14px',
-      fontFamily: 'Arial, sans-serif',
+      fontFamily: 'Exo 2, sans-serif',
       color: '#8b90a5',
       align: 'center',
       lineSpacing: 6,
@@ -415,7 +417,7 @@ export class MenuScene extends Phaser.Scene {
     // Close button
     const closeBtn = this.add.text(0, 80, 'Got it!', {
       fontSize: '16px',
-      fontFamily: 'Arial Black, Arial, sans-serif',
+      fontFamily: 'Russo One, sans-serif',
       color: '#4ecdc4',
     });
     closeBtn.setOrigin(0.5);
