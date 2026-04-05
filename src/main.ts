@@ -62,13 +62,16 @@ function startGame() {
 window.setGamePaused = function(paused: boolean) {
   console.log('setGamePaused called:', paused, 'gameInstance:', !!gameInstance);
   if (gameInstance) {
-    const scenes = gameInstance.scene.scenes;
-    for (const scene of scenes) {
-      if (scene.scene.isActive() && 'setPaused' in scene) {
-        (scene as any).setPaused(paused);
-        console.log('Paused scene:', scene.scene.key);
-      }
+    // Find GameScene specifically and pause it
+    const gameScene = gameInstance.scene.getScene('GameScene') as any;
+    if (gameScene && 'setPaused' in gameScene) {
+      gameScene.setPaused(paused);
+      console.log('GameScene paused:', paused);
+    } else {
+      console.log('GameScene not found, scenes:', gameInstance.scene.scenes.map(s => s.scene.key));
     }
+  } else {
+    console.log('No game instance');
   }
 };
 

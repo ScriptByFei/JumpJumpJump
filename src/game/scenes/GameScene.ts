@@ -473,7 +473,14 @@ export class GameScene extends Phaser.Scene {
   // ─── Pause Control ─────────────────────────────────────────────────────────
   public setPaused(paused: boolean): void {
     this.isPaused = paused;
-    console.log('GameScene: paused =', paused);
+    console.log('GameScene.setPaused:', paused);
+    
+    // Also pause physics
+    if (paused) {
+      this.physics.pause();
+    } else {
+      this.physics.resume();
+    }
   }
 
   // ─── Update ─────────────────────────────────────────────────────────────────
