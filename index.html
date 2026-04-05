@@ -376,33 +376,104 @@
         backdrop-filter: blur(10px);
       }
       
-      .pause-btn {
+      /* ─── Game HUD ───────────────────────────────────────────────────────────── */
+      .hud-top {
         position: fixed;
-        top: calc(12px + var(--safe-top));
-        right: 16px;
-        width: 40px;
-        height: 40px;
-        background: rgba(0, 0, 0, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 10px;
+        top: calc(env(safe-area-inset-top, 0px) + 10px);
+        left: calc(env(safe-area-inset-left, 0px) + 12px);
+        right: calc(env(safe-area-inset-right, 0px) + 12px);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        z-index: 1000;
+        pointer-events: none;
+      }
+      
+      .hud-left {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+      
+      .hud-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+      
+      .score {
+        font-family: 'Russo One', Arial, sans-serif;
+        font-size: 44px;
         color: white;
-        font-size: 14px;
+        line-height: 1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      
+      .combo {
+        font-family: 'Russo One', Arial, sans-serif;
+        font-size: 22px;
+        color: #4ecdc4;
+        line-height: 1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      
+      .pause-btn {
+        width: 44px;
+        height: 44px;
+        background: rgba(0, 0, 0, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        color: white;
+        font-size: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        z-index: 1001;
+        pointer-events: auto;
         -webkit-appearance: none;
         appearance: none;
         outline: none;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
+        flex-shrink: 0;
       }
       
       .pause-btn:active {
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(0, 0, 0, 0.75);
         transform: scale(0.95);
+      }
+      
+      .best-score-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 8px 14px;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        min-width: 70px;
+        max-width: 90px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      }
+      
+      .best-score-card .label {
+        font-family: 'Exo 2', Arial, sans-serif;
+        font-size: 10px;
+        font-weight: 600;
+        color: #9ba3b5;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      
+      .best-score-card .value {
+        font-family: 'Russo One', Arial, sans-serif;
+        font-size: 20px;
+        color: #feca57;
+        line-height: 1.2;
       }
     </style>
   </head>
@@ -492,9 +563,23 @@
       </div>
     </div>
 
+    <!-- Game HUD -->
+    <div class="hud-top" id="hud-top" style="display: none;">
+      <div class="hud-left">
+        <div class="score" id="hud-score">0</div>
+        <div class="combo" id="hud-combo" style="display: none;">COMBO ×1</div>
+      </div>
+      <div class="hud-right">
+        <button class="pause-btn" id="pause-btn" aria-label="Pause">II</button>
+        <div class="best-score-card">
+          <div class="label">BEST</div>
+          <div class="value" id="hud-best">0</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Game Container -->
     <div id="game-container"></div>
-    <button class="pause-btn" id="pause-btn">⏸</button>
     
     <!-- Game Script -->
     <script type="module" src="/src/main.ts"></script>
@@ -502,18 +587,28 @@
       const playBtn = document.getElementById('play-btn');
       const finalPlayBtn = document.getElementById('final-play-btn');
       const pauseBtn = document.getElementById('pause-btn');
+      const hudTop = document.getElementById('hud-top');
+      const hudScore = document.getElementById('hud-score');
+      const hudCombo = document.getElementById('hud-combo');
+      const hudBest = document.getElementById('hud-best');
       const landing = document.getElementById('landing');
       const gameContainer = document.getElementById('game-container');
+      
+      let isPaused = false;
+      let currentScore = 0;
+      let currentBest = 0;
       
       function startGame() {
         landing.style.display = 'none';
         gameContainer.style.display = 'block';
-        pauseBtn.style.display = 'flex';
+        hudTop.style.display = 'flex';
+        isPaused = false;
         window.dispatchEvent(new CustomEvent('startGame'));
       }
       
-      // Simple pause toggle
+      // Toggle pause - only pauses, overlay handles resume
       function togglePause() {
+        isPaused = true;
         if (typeof window.setGamePaused === 'function') {
           window.setGamePaused(true);
         }
@@ -521,6 +616,7 @@
       
       // Resume from pause menu
       function resumeGame() {
+        isPaused = false;
         if (typeof window.setGamePaused === 'function') {
           window.setGamePaused(false);
         }
@@ -528,11 +624,49 @@
       
       // Restart from pause menu
       function restartGame() {
+        isPaused = false;
         if (typeof window.restartGame === 'function') {
           window.restartGame();
         }
-        pauseBtn.style.display = 'flex';
       }
+      
+      // Update HUD score from game
+      function updateScore(score) {
+        currentScore = score;
+        if (hudScore) hudScore.textContent = score.toString();
+        
+        // Update best if beaten
+        if (score > currentBest) {
+          currentBest = score;
+          if (hudBest) hudBest.textContent = score.toString();
+        }
+      }
+      
+      // Update HUD combo
+      function updateCombo(combo) {
+        if (hudCombo) {
+          if (combo >= 1) {
+            hudCombo.textContent = `COMBO ×${combo}`;
+            hudCombo.style.display = 'block';
+          } else {
+            hudCombo.style.display = 'none';
+          }
+        }
+      }
+      
+      // Set initial best score
+      function setBestScore(score) {
+        currentBest = score;
+        if (hudBest) hudBest.textContent = score.toString();
+      }
+      
+      // Listen for score/combo updates from game
+      window.addEventListener('updateHUD', (e) => {
+        const { score, combo, best } = e.detail;
+        if (score !== undefined) updateScore(score);
+        if (combo !== undefined) updateCombo(combo);
+        if (best !== undefined) setBestScore(best);
+      });
       
       playBtn.addEventListener('click', startGame);
       finalPlayBtn.addEventListener('click', startGame);
@@ -543,7 +677,7 @@
       if (resumeBtn) resumeBtn.addEventListener('click', resumeGame);
       if (restartBtn) restartBtn.addEventListener('click', restartGame);
       
-      // Pause button with both click and touch support for mobile
+      // Pause button
       pauseBtn.addEventListener('click', togglePause);
       pauseBtn.addEventListener('touchend', function(e) {
         e.preventDefault();

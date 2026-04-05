@@ -171,6 +171,15 @@ export class GameScene extends Phaser.Scene {
     // Load high score
     this.highScore = parseInt(localStorage.getItem(HIGHSCORE_KEY) || '0');
 
+    // Dispatch initial HUD values to HTML overlay
+    window.dispatchEvent(new CustomEvent('updateHUD', {
+      detail: { 
+        score: 0,
+        combo: 0,
+        best: this.highScore
+      }
+    }));
+
     // Background
     this.createBackground();
     console.log('GameScene: background created');
@@ -657,6 +666,11 @@ export class GameScene extends Phaser.Scene {
     if (this.combo >= 1) {
       this.comboText.setText(`COMBO ×${this.combo}`);
       this.comboText.setAlpha(1);
+      
+      // Update HTML HUD
+      window.dispatchEvent(new CustomEvent('updateHUD', {
+        detail: { combo: this.combo }
+      }));
       // Subtle pulse animation
       this.tweens.add({
         targets: this.comboText,
@@ -766,6 +780,11 @@ export class GameScene extends Phaser.Scene {
       const oldScore = this.score;
       this.score = newScore;
       this.scoreText.setText(this.score.toString());
+
+      // Update HTML HUD
+      window.dispatchEvent(new CustomEvent('updateHUD', {
+        detail: { score: this.score }
+      }));
 
       // Scale animation on score change
       this.tweens.add({
