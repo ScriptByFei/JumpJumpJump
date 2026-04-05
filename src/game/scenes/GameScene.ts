@@ -239,30 +239,30 @@ export class GameScene extends Phaser.Scene {
 
   // ─── UI ─────────────────────────────────────────────────────────────────────
   private createUI(): void {
-    const padding = 24;
+    const padding = 20;
     const safeTop = this.getSafeAreaTop();
     const safeLeft = this.getSafeAreaLeft();
 
-    // Score - large, bold, left-aligned
+    // Score - prominent but balanced, 48px
     this.scoreText = this.add.text(safeLeft + padding, safeTop + padding, '0', {
-      fontSize: '64px',
+      fontSize: '48px',
       fontFamily: 'Russo One, Arial Black, sans-serif',
       color: '#ffffff',
     });
     this.scoreText.setOrigin(0, 0);
     this.scoreText.setDepth(1000);
 
-    // Combo - directly below score, 8px gap, 24px semibold, 85% opacity
-    this.comboText = this.add.text(safeLeft + padding, safeTop + padding + 72, '', {
-      fontSize: '24px',
+    // Combo - directly below score, "Combo x10" format, 18px, 80% opacity
+    this.comboText = this.add.text(safeLeft + padding, safeTop + padding + 54, '', {
+      fontSize: '18px',
       fontFamily: 'Exo 2, Arial, sans-serif',
       fontStyle: '600',
       color: '#ffffff',
-    }).setOrigin(0, 0).setDepth(1000).setAlpha(0.85);
+    }).setOrigin(0, 0).setDepth(1000).setAlpha(0.8);
 
     // High score (top right, subtle)
     this.highScoreText = this.add.text(GAME_WIDTH - padding, safeTop + padding, `Best: ${this.highScore}`, {
-      fontSize: '14px',
+      fontSize: '13px',
       fontFamily: 'Exo 2, Arial, sans-serif',
       color: '#' + COLORS.textMuted.toString(16).padStart(6, '0'),
     }).setOrigin(1, 0);
@@ -608,8 +608,8 @@ export class GameScene extends Phaser.Scene {
 
   private updateComboDisplay(): void {
     if (this.combo >= 1) {
-      this.comboText.setText(`${this.combo}x`);
-      this.comboText.setAlpha(0.85);
+      this.comboText.setText(`Combo x${this.combo}`);
+      this.comboText.setAlpha(0.8);
     } else {
       this.comboText.setAlpha(0);
     }
@@ -837,7 +837,7 @@ export class GameScene extends Phaser.Scene {
     const minY = Math.min(cameraTop + safeTop + 20, this.scoreText.y);
     this.scoreText.setY(minY);
     this.highScoreText.setY(minY);
-    this.comboText.setY(minY + 84);
+    this.comboText.setY(minY + 62);
   }
 
   // ─── Visual Effects ─────────────────────────────────────────────────────────
