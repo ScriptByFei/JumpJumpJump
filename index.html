@@ -531,8 +531,11 @@
         }
         
         // Call exposed function directly
+        console.log('togglePause calling setGamePaused:', isPaused, typeof window.setGamePaused);
         if (typeof window.setGamePaused === 'function') {
           window.setGamePaused(isPaused);
+        } else {
+          console.log('WARNING: window.setGamePaused not found!');
         }
       }
       

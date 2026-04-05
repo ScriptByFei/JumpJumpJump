@@ -160,6 +160,7 @@ export class GameScene extends Phaser.Scene {
     console.log('GameScene: create() called');
     
     this.isGameOver = false;
+    this.isPaused = false; // Reset pause state
     this.score = 0;
     this.startY = GAME_HEIGHT - 100;
     this.maxHeight = 0;
@@ -474,13 +475,6 @@ export class GameScene extends Phaser.Scene {
   public setPaused(paused: boolean): void {
     this.isPaused = paused;
     console.log('GameScene.setPaused:', paused);
-    
-    // Also pause physics
-    if (paused) {
-      this.physics.pause();
-    } else {
-      this.physics.resume();
-    }
   }
 
   // ─── Update ─────────────────────────────────────────────────────────────────
