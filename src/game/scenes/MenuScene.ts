@@ -119,8 +119,8 @@ export class MenuScene extends Phaser.Scene {
     this.titleText.setDepth(50);
 
     // Tagline: LARGE, HIGH CONTRAST, CLEAR - no effects
-    this.taglineText = this.add.text(centerX, titleY + 55, 'Jump higher. Survive longer.', {
-      fontSize: '24px',
+    this.taglineText = this.add.text(centerX, titleY + 75, 'Jump higher. Survive longer.', {
+      fontSize: '50px',
       fontFamily: 'Exo 2, sans-serif',
       fontStyle: '600',
       color: '#ffffff',
