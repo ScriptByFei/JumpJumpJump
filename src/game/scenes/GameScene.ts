@@ -246,64 +246,64 @@ export class GameScene extends Phaser.Scene {
 
     // ─── Left HUD Block: Score + Combo ───────────────────────────────────────
     
-    // Score - 48px, prominent but balanced
+    // Score - 44px, clear and balanced
     this.scoreText = this.add.text(safeLeft + padding, topOffset, '0', {
-      fontSize: '48px',
+      fontSize: '44px',
       fontFamily: 'Russo One, Arial Black, sans-serif',
       color: '#ffffff',
     });
     this.scoreText.setOrigin(0, 0);
     this.scoreText.setDepth(1000);
 
-    // Combo - "COMBO ×13" in accent color, 18px, elegant spacing
-    this.comboText = this.add.text(safeLeft + padding, topOffset + 52, '', {
-      fontSize: '18px',
-      fontFamily: 'Exo 2, Arial, sans-serif',
-      fontStyle: '600',
+    // Combo - "COMBO ×13" in accent color, 26px, clear and prominent
+    this.comboText = this.add.text(safeLeft + padding, topOffset + 50, '', {
+      fontSize: '26px',
+      fontFamily: 'Russo One, Arial, sans-serif',
       color: '#4ecdc4',
     });
     this.comboText.setOrigin(0, 0);
     this.comboText.setDepth(1000);
     this.comboText.setAlpha(0);
 
+    // Store combo base Y for camera following
+    (this as any).comboBaseY = topOffset + 50;
+
     // ─── Right HUD Block: Pause Button + Best Score Badge ─────────────────────
+    
+    // Pause button positioned via HTML overlay (top right)
+    // Best Score Badge - premium compact panel aligned with pause button
 
-    // Best Score Badge - premium compact card, below pause button
-    const bestBadgeX = GAME_WIDTH - padding;
-    const bestBadgeY = topOffset + 54;
-
-    // Best badge container (for positioning)
-    const bestContainer = this.add.container(bestBadgeX, bestBadgeY);
+    // Best badge container
+    const bestContainer = this.add.container(GAME_WIDTH - padding, topOffset);
     bestContainer.setDepth(1000);
 
-    // Best badge background - clean rounded rectangle
+    // Best badge background - same style as pause button (rounded, subtle)
     const bestBg = this.add.graphics();
-    bestBg.fillStyle(0x000000, 0.35);
-    bestBg.fillRoundedRect(-80, 0, 80, 56, 10);
+    bestBg.fillStyle(0x000000, 0.4);
+    bestBg.fillRoundedRect(-76, 0, 76, 64, 12);
     bestContainer.add(bestBg);
 
-    // BEST label - small, uppercase
-    const bestLabel = this.add.text(-8, 8, 'BEST', {
-      fontSize: '10px',
+    // BEST label - uppercase, refined
+    const bestLabel = this.add.text(-6, 10, 'BEST', {
+      fontSize: '11px',
       fontFamily: 'Exo 2, Arial, sans-serif',
-      fontStyle: '600',
+      fontStyle: '700',
       color: '#9ba3b5',
     });
     bestLabel.setOrigin(1, 0);
     bestContainer.add(bestLabel);
 
-    // Best value - clear number
-    this.highScoreText = this.add.text(-8, 22, this.highScore.toString(), {
-      fontSize: '22px',
+    // Best value - clean number, no prefix
+    this.highScoreText = this.add.text(-6, 28, this.highScore.toString(), {
+      fontSize: '24px',
       fontFamily: 'Russo One, Arial, sans-serif',
       color: '#feca57',
     });
     this.highScoreText.setOrigin(1, 0);
     bestContainer.add(this.highScoreText);
 
-    // Store references for camera following
+    // Store reference for camera following
     (this as any).bestContainer = bestContainer;
-    (this as any).bestBadgeOffsetY = 54;
 
     // Touch controls hint
     this.createTouchHint();
@@ -650,9 +650,9 @@ export class GameScene extends Phaser.Scene {
       // Subtle pulse animation
       this.tweens.add({
         targets: this.comboText,
-        scaleX: 1.08,
-        scaleY: 1.08,
-        duration: 120,
+        scaleX: 1.06,
+        scaleY: 1.06,
+        duration: 150,
         yoyo: true,
         ease: 'Quad.easeOut',
       });
@@ -773,7 +773,7 @@ export class GameScene extends Phaser.Scene {
 
       // Flash effect when beating high score
       if (this.score > this.highScore && this.score > 0) {
-        this.highScoreText.setText(`Best: ${this.score}`);
+        this.highScoreText.setText(this.score.toString());
         this.highScoreText.setColor('#' + COLORS.highscoreText.toString(16).padStart(6, '0'));
       }
     }
@@ -883,12 +883,15 @@ export class GameScene extends Phaser.Scene {
     // Score follows camera up
     const minY = Math.min(cameraTop + safeTop + padding, this.scoreText.y);
     this.scoreText.setY(minY);
-    this.comboText.setY(minY + 52);
     
-    // Best badge follows camera up - same base y, with offset for gap
+    // Combo follows score
+    if ((this as any).comboBaseY !== undefined) {
+      this.comboText.setY(minY + 50);
+    }
+    
+    // Best badge follows camera up
     if ((this as any).bestContainer) {
-      const offsetY = (this as any).bestBadgeOffsetY || 54;
-      (this as any).bestContainer.setY(minY + offsetY);
+      (this as any).bestContainer.setY(minY);
     }
   }
 
