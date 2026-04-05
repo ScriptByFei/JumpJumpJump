@@ -404,9 +404,22 @@ export class GameScene extends Phaser.Scene {
 
   // ─── Pause Control ─────────────────────────────────────────────────────────
   public setPaused(paused: boolean): void {
-    // Use Phaser's time.timeScale to freeze/unfreeze the game
-    // This is the proper Phaser way to pause without breaking input
-    this.time.timeScale = paused ? 0 : 1;
+    this.isPaused = paused;
+    
+    if (paused) {
+      // Freeze player Y velocity so they don't fall through platforms
+      if (this.player && this.player.body) {
+        const body = this.player.body as Phaser.Physics.Arcade.Body;
+        body.velocity.y = 0;
+        body.acceleration.y = 0;
+      }
+    } else {
+      // Restore gravity when resuming
+      if (this.player && this.player.body) {
+        const body = this.player.body as Phaser.Physics.Arcade.Body;
+        body.acceleration.y = 1000; // GRAVITY value
+      }
+    }
   }
 
   public isPausedState(): boolean {
@@ -415,10 +428,13 @@ export class GameScene extends Phaser.Scene {
 
   // ─── Update ─────────────────────────────────────────────────────────────────
   update(_time: number, _delta: number): void {
-    // Update player
+    // Update player (always, so controls work)
     if (this.player) {
       this.player.update(_time, _delta);
     }
+
+    // Skip game logic if paused
+    if (this.isPaused) return;
 
     // Skip game logic if game over
     if (this.isGameOver) return;
