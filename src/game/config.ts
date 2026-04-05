@@ -151,6 +151,29 @@ export const TOUCH = {
   EDGE_SENSITIVITY: 50, // Extra speed at screen edges
 };
 
+// ─── Powerups ──────────────────────────────────────────────────────────────────
+export type PowerupType = 'shield' | 'magnet' | 'rocket' | 'double';
+
+export const POWERUP = {
+  SPAWN_CHANCE: 0.03,
+  MIN_HEIGHT: 500,
+  SIZE: 28,
+  FALL_SPEED: 60,
+  DURATION: {
+    shield: 5000,
+    magnet: 8000,
+    rocket: 10000,
+    double: 15000,
+  },
+};
+
+export const POWERUP_TYPES = {
+  shield: { color: 0x00d4ff, symbol: 'S' },
+  magnet: { color: 0xff4081, symbol: 'M' },
+  rocket: { color: 0xff6b35, symbol: 'R' },
+  double: { color: 0xffd700, symbol: '2x' },
+};
+
 // ─── Safe Area (will be calculated at runtime) ───────────────────────────────
 export let SAFE_AREA = {
   top: 0,

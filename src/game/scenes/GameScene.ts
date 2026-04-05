@@ -11,9 +11,13 @@ import {
   ANIMATION,
   HIGHSCORE_KEY,
   PlatformType,
+  POWERUP,
+  POWERUP_TYPES,
+  PowerupType,
 } from '../config';
 import { Player } from '../objects/Player';
 import { Platform } from '../objects/Platform';
+import { Powerup } from '../objects/Powerup';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Game Scene - Enhanced with combo system, sounds, and better effects
@@ -128,6 +132,12 @@ export class GameScene extends Phaser.Scene {
   private startY: number = 0;
   private maxHeight: number = 0;
 
+  // Powerups
+  private powerups: Powerup[] = [];
+  private activePowerups: Set<PowerupType> = new Set();
+  private powerupTimers: Map<PowerupType, number> = new Map();
+  private activePowerupIndicators: Phaser.GameObjects.Container[] = [];
+
   // Combo system
   private combo: number = 0;
   private comboMultiplier: number = 1;
@@ -158,6 +168,13 @@ export class GameScene extends Phaser.Scene {
     this.platforms = [];
     this.combo = 0;
     this.comboMultiplier = 1;
+
+    // Reset powerups
+    this.powerups.forEach(p => p.destroy());
+    this.powerups = [];
+    this.activePowerups.clear();
+    this.clearPowerupTimers();
+    this.clearPowerupIndicators();
 
     // Load high score
     this.highScore = parseInt(localStorage.getItem(HIGHSCORE_KEY) || '0');
@@ -316,6 +333,15 @@ export class GameScene extends Phaser.Scene {
   private createPlatform(x: number, y: number, type: PlatformType): Platform {
     const platform = new Platform(this, x, y, type);
     this.platforms.push(platform);
+
+    // Spawn powerup?
+    const height = this.startY - y;
+    if (height > POWERUP.MIN_HEIGHT && Math.random() < POWERUP.SPAWN_CHANCE) {
+      const types: PowerupType[] = ['shield', 'magnet', 'rocket', 'double'];
+      const pType = types[Math.floor(Math.random() * types.length)];
+      this.powerups.push(new Powerup(this, x, y - 40, pType));
+    }
+
     return platform;
   }
 
@@ -411,8 +437,14 @@ export class GameScene extends Phaser.Scene {
     // Update platforms
     this.platforms.forEach(p => p.update(_delta));
 
+    // Update powerups
+    this.updatePowerups(_delta);
+
     // Collision detection
     this.checkCollisions();
+
+    // Check powerup collection
+    this.checkPowerupCollection();
 
     // Check game over
     this.checkGameOver();
@@ -671,8 +703,13 @@ export class GameScene extends Phaser.Scene {
       this.maxHeight = currentHeight;
     }
 
-    const newScore = Math.floor((this.maxHeight / 10) * this.comboMultiplier);
-    
+    let newScore = Math.floor((this.maxHeight / 10) * this.comboMultiplier);
+
+    // Double powerup
+    if (this.activePowerups.has('double')) {
+      newScore *= 2;
+    }
+
     if (newScore !== this.score) {
       const oldScore = this.score;
       this.score = newScore;
@@ -798,5 +835,195 @@ export class GameScene extends Phaser.Scene {
         star.x = Phaser.Math.Between(0, GAME_WIDTH);
       }
     });
+  }
+
+  // ─── Powerup Methods ─────────────────────────────────────────────────────────
+  private updatePowerups(_delta: number): void {
+    for (const powerup of this.powerups) {
+      powerup.update(this.time.now, _delta);
+      powerup.y += POWERUP.FALL_SPEED * (_delta / 1000);
+    }
+
+    const cameraBottom = this.cameras.main.scrollY + GAME_HEIGHT;
+    this.powerups = this.powerups.filter(p => {
+      if (p.y > cameraBottom + 100) {
+        p.destroy();
+        return false;
+      }
+      return true;
+    });
+
+    this.updateActivePowerups();
+  }
+
+  private checkPowerupCollection(): void {
+    if (!this.player.isFalling()) return;
+
+    for (let i = this.powerups.length - 1; i >= 0; i--) {
+      const powerup = this.powerups[i];
+      const bounds = powerup.getCollectionBounds();
+
+      if (this.player.getRight() > bounds.left && this.player.getLeft() < bounds.right &&
+          this.player.getBottom() > bounds.top && this.player.getTop() < bounds.bottom) {
+        this.collectPowerup(powerup, i);
+      }
+    }
+  }
+
+  private collectPowerup(powerup: Powerup, index: number): void {
+    powerup.collect();
+    this.powerups.splice(index, 1);
+    const type = powerup.powerupType;
+
+    this.activatePowerup(type);
+    this.showPowerupEffect(powerup.x, powerup.y, type);
+
+    const config = POWERUP_TYPES[type];
+    const text = this.add.text(powerup.x, powerup.y, `+${type.toUpperCase()}!`, {
+      fontSize: '18px',
+      fontFamily: 'Arial Black, sans-serif',
+      color: '#' + config.color.toString(16).padStart(6, '0'),
+      stroke: '#000000',
+      strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(200);
+
+    this.tweens.add({
+      targets: text,
+      y: text.y - 50,
+      alpha: 0,
+      duration: 600,
+      onComplete: () => text.destroy(),
+    });
+  }
+
+  private activatePowerup(type: PowerupType): void {
+    if (this.powerupTimers.has(type)) {
+      clearTimeout(this.powerupTimers.get(type) as unknown as number);
+    }
+
+    this.activePowerups.add(type);
+
+    switch (type) {
+      case 'rocket': this.player.activateRocket(true); break;
+      case 'shield': this.player.activateShield(true); break;
+    }
+
+    this.createPowerupIndicator(type);
+
+    const duration = POWERUP.DURATION[type];
+    const timerId = setTimeout(() => this.deactivatePowerup(type), duration) as unknown as number;
+    this.powerupTimers.set(type, timerId);
+  }
+
+  private deactivatePowerup(type: PowerupType): void {
+    this.activePowerups.delete(type);
+    this.powerupTimers.delete(type);
+
+    switch (type) {
+      case 'rocket': this.player.activateRocket(false); break;
+      case 'shield': this.player.activateShield(false); break;
+    }
+
+    this.removePowerupIndicator(type);
+  }
+
+  private updateActivePowerups(): void {
+    if (!this.activePowerups.has('magnet')) return;
+
+    for (const platform of this.platforms) {
+      if (!platform.alive) continue;
+
+      const dx = platform.x - this.player.x;
+      const dy = platform.y - this.player.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 150 && dist > 0) {
+        const force = (1 - dist / 150) * 30;
+        this.player.body!.velocity.x += (dx / dist) * force;
+      }
+    }
+
+    const maxVel = 400;
+    if (Math.abs(this.player.body!.velocity.x) > maxVel) {
+      this.player.body!.velocity.x = Math.sign(this.player.body!.velocity.x) * maxVel;
+    }
+  }
+
+  private createPowerupIndicator(type: PowerupType): void {
+    const safeTop = this.getSafeAreaTop();
+    const y = safeTop + 90 + this.activePowerupIndicators.length * 28;
+    const config = POWERUP_TYPES[type];
+
+    const container = this.add.container(GAME_WIDTH - 30, y);
+
+    const bg = this.add.circle(0, 0, 11, config.color, 0.9);
+    container.add(bg);
+
+    const symbols: Record<PowerupType, string> = {
+      shield: 'S', magnet: 'M', rocket: 'R', double: '2x'
+    };
+    const symbol = this.add.text(0, 0, symbols[type], {
+      fontSize: '10px',
+      fontFamily: 'Arial, sans-serif',
+      color: '#ffffff',
+    }).setOrigin(0.5);
+    container.add(symbol);
+
+    this.tweens.add({
+      targets: container,
+      scale: 1.1,
+      duration: 500,
+      yoyo: true,
+      repeat: -1,
+    });
+
+    container.setDepth(1000);
+    this.activePowerupIndicators.push(container);
+  }
+
+  private removePowerupIndicator(type: PowerupType): void {
+    const typeIndex = [...this.activePowerups].indexOf(type);
+    const visualIndex = this.activePowerupIndicators.length - typeIndex - 1;
+
+    if (visualIndex >= 0 && visualIndex < this.activePowerupIndicators.length) {
+      const indicator = this.activePowerupIndicators[visualIndex];
+      this.tweens.killTweensOf(indicator);
+      indicator.destroy();
+      this.activePowerupIndicators.splice(visualIndex, 1);
+
+      const safeTop = this.getSafeAreaTop();
+      this.activePowerupIndicators.forEach((ind, i) => {
+        ind.y = safeTop + 90 + i * 28;
+      });
+    }
+  }
+
+  private clearPowerupIndicators(): void {
+    for (const indicator of this.activePowerupIndicators) {
+      this.tweens.killTweensOf(indicator);
+      indicator.destroy();
+    }
+    this.activePowerupIndicators = [];
+  }
+
+  private clearPowerupTimers(): void {
+    for (const timer of this.powerupTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.powerupTimers.clear();
+  }
+
+  private showPowerupEffect(_x: number, _y: number, type: PowerupType): void {
+    const colors: Record<PowerupType, number> = {
+      shield: 0x00d4ff, magnet: 0xff4081, rocket: 0xff6b35, double: 0xffd700
+    };
+    const color = colors[type];
+    this.cameras.main.flash(100, (color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff, true);
+  }
+
+  private getSafeAreaTop(): number {
+    const style = getComputedStyle(document.documentElement);
+    const sat = style.getPropertyValue('--sat').trim();
+    return sat ? parseInt(sat) : 44;
   }
 }

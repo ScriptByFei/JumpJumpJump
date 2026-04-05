@@ -39,6 +39,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   public isGrounded: boolean = false;
   public lastPlatformY: number = 0;
 
+  // Powerup state
+  private hasRocket: boolean = false;
+  private hasShield: boolean = false;
+  private shieldGfx?: Phaser.GameObjects.Graphics;
+
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'player');
 
@@ -179,6 +184,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       }
     }
 
+    // Update shield visual position
+    if (this.hasShield && this.shieldGfx) {
+      this.updateShieldVisual();
+    }
+
     // Reset grounded state (will be set by collision)
     this.isGrounded = false;
   }
@@ -231,6 +241,40 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     // More particles for boost
     this.triggerBoostEffect();
   }
+
+  // ─── Powerup Methods ─────────────────────────────────────────────────────────
+  activateRocket(active: boolean): void {
+    this.hasRocket = active;
+    (this.body! as Phaser.Physics.Arcade.Body).setGravityY(
+      active ? GRAVITY * 1.3 : GRAVITY
+    );
+  }
+
+  activateShield(active: boolean): void {
+    this.hasShield = active;
+    if (active && !this.shieldGfx) {
+      this.shieldGfx = this.scene.add.graphics();
+      this.shieldGfx.setDepth(5);
+    }
+    if (!active && this.shieldGfx) {
+      this.shieldGfx.clear();
+    }
+  }
+
+  updateShieldVisual(): void {
+    if (!this.shieldGfx || !this.hasShield) return;
+    this.shieldGfx.clear();
+    this.shieldGfx.lineStyle(3, 0x00d4ff, 0.8);
+    this.shieldGfx.strokeEllipse(0, 0, 50, 40);
+    this.shieldGfx.fillStyle(0x00d4ff, 0.15);
+    this.shieldGfx.fillEllipse(0, 0, 50, 40);
+    this.shieldGfx.setPosition(this.x, this.y);
+    const pulse = Math.sin(this.scene.time.now / 150) * 0.1 + 1;
+    this.shieldGfx.setScale(pulse);
+  }
+
+  hasActiveShield(): boolean { return this.hasShield; }
+  hasActiveRocket(): boolean { return this.hasRocket; }
 
   // ─── Squash & Stretch ────────────────────────────────────────────────────────
   private squash(scaleX: number, scaleY: number, duration: number): void {
@@ -304,5 +348,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   getRight(): number {
     return this.x + PLAYER_SIZE_W / 2 - 5;
+  }
+
+  getTop(): number {
+    return this.y - PLAYER_SIZE_H / 2;
   }
 }
