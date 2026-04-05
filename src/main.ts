@@ -8,6 +8,8 @@ import { GAME_WIDTH, GAME_HEIGHT } from './game/config';
 // JumpJumpJump - Main Entry Point
 // ═══════════════════════════════════════════════════════════════════════════════
 
+let gameInstance: Phaser.Game | null = null;
+
 const config: Phaser.Types.Core.GameConfig = {
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
@@ -42,9 +44,24 @@ function startGame() {
   const container = document.getElementById('game-container');
   if (container) {
     container.style.display = 'block';
-    new Phaser.Game(config);
+    if (!gameInstance) {
+      gameInstance = new Phaser.Game(config);
+    }
+  }
+}
+
+// Listen for togglePause event from HTML overlay
+function handleTogglePause(event: Event) {
+  const customEvent = event as CustomEvent<boolean>;
+  const isPaused = customEvent.detail;
+  if (gameInstance && gameInstance.scene && gameInstance.scene.scenes.length > 0) {
+    const activeScene = gameInstance.scene.scenes.find(s => s.scene.isActive() && s.scene.isVisible());
+    if (activeScene && 'setPaused' in activeScene) {
+      (activeScene as any).setPaused(isPaused);
+    }
   }
 }
 
 // Listen for startGame event from landing page
 window.addEventListener('startGame', startGame);
+window.addEventListener('togglePause', handleTogglePause);

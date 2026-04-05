@@ -135,6 +135,9 @@ export class GameScene extends Phaser.Scene {
   private comboTimeout: number = 2000; // ms to maintain combo
   private comboText!: Phaser.GameObjects.Text;
 
+  // Pause state
+  private isPaused: boolean = false;
+
   // UI
   private scoreText!: Phaser.GameObjects.Text;
   private highScoreText!: Phaser.GameObjects.Text;
@@ -277,29 +280,29 @@ export class GameScene extends Phaser.Scene {
     const bestContainer = this.add.container(GAME_WIDTH - padding, topOffset);
     bestContainer.setDepth(1000);
 
-    // Best badge background - same style as pause button (rounded, subtle)
+    // Best badge background - centered, same style as pause button
     const bestBg = this.add.graphics();
     bestBg.fillStyle(0x000000, 0.4);
-    bestBg.fillRoundedRect(-76, 0, 76, 64, 12);
+    bestBg.fillRoundedRect(-64, 0, 128, 64, 12);
     bestContainer.add(bestBg);
 
-    // BEST label - uppercase, refined
-    const bestLabel = this.add.text(-6, 10, 'BEST', {
+    // BEST label - uppercase, centered
+    const bestLabel = this.add.text(0, 10, 'BEST', {
       fontSize: '11px',
       fontFamily: 'Exo 2, Arial, sans-serif',
       fontStyle: '700',
       color: '#9ba3b5',
     });
-    bestLabel.setOrigin(1, 0);
+    bestLabel.setOrigin(0.5, 0);
     bestContainer.add(bestLabel);
 
-    // Best value - clean number, no prefix
-    this.highScoreText = this.add.text(-6, 28, this.highScore.toString(), {
+    // Best value - clean number, centered, no prefix
+    this.highScoreText = this.add.text(0, 28, this.highScore.toString(), {
       fontSize: '24px',
       fontFamily: 'Russo One, Arial, sans-serif',
       color: '#feca57',
     });
-    this.highScoreText.setOrigin(1, 0);
+    this.highScoreText.setOrigin(0.5, 0);
     bestContainer.add(this.highScoreText);
 
     // Store reference for camera following
@@ -467,9 +470,15 @@ export class GameScene extends Phaser.Scene {
     return Phaser.Math.Between(margin, GAME_WIDTH - margin);
   }
 
+  // ─── Pause Control ─────────────────────────────────────────────────────────
+  public setPaused(paused: boolean): void {
+    this.isPaused = paused;
+    console.log('GameScene: paused =', paused);
+  }
+
   // ─── Update ─────────────────────────────────────────────────────────────────
   update(_time: number, _delta: number): void {
-    if (this.isGameOver) return;
+    if (this.isGameOver || this.isPaused) return;
 
     // Update player
     this.player.update(_time, _delta);

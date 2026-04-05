@@ -396,6 +396,8 @@
         appearance: none;
         outline: none;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
       }
       
       .pause-btn:active {
@@ -513,7 +515,13 @@
       
       playBtn.addEventListener('click', startGame);
       finalPlayBtn.addEventListener('click', startGame);
+      
+      // Pause button with both click and touch support for mobile
       pauseBtn.addEventListener('click', togglePause);
+      pauseBtn.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        togglePause();
+      });
     </script>
   </body>
 </html>
