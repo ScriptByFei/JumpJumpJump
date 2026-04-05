@@ -382,7 +382,7 @@
         right: 16px;
         width: 44px;
         height: 44px;
-        background: rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.15);
         border: none;
         border-radius: 12px;
         color: white;
@@ -390,7 +390,17 @@
         cursor: pointer;
         z-index: 1001;
         display: none;
-        backdrop-filter: blur(10px);
+        -webkit-appearance: none;
+        appearance: none;
+        outline: none;
+      }
+      
+      .pause-btn:focus {
+        outline: none;
+      }
+      
+      .pause-btn:active {
+        background: rgba(255,255,255,0.25);
       }
     </style>
     <script type="module" crossorigin src="./assets/index-BScwVvAH.js"></script>
