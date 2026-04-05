@@ -375,6 +375,23 @@
         display: none;
         backdrop-filter: blur(10px);
       }
+      
+      .pause-btn {
+        position: fixed;
+        top: calc(20px + var(--safe-top));
+        right: 16px;
+        width: 44px;
+        height: 44px;
+        background: rgba(255,255,255,0.1);
+        border: none;
+        border-radius: 12px;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        z-index: 1001;
+        display: none;
+        backdrop-filter: blur(10px);
+      }
     </style>
     <script type="module" crossorigin src="./assets/index-BScwVvAH.js"></script>
   <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
@@ -457,32 +474,36 @@
     
     <!-- Game Container -->
     <div id="game-container"></div>
-    <button class="back-btn" id="back-btn">←</button>
+    <button class="pause-btn" id="pause-btn">⏸</button>
     
     <!-- Game Script -->
     <script>
       const playBtn = document.getElementById('play-btn');
       const finalPlayBtn = document.getElementById('final-play-btn');
+      const pauseBtn = document.getElementById('pause-btn');
       const landing = document.getElementById('landing');
       const gameContainer = document.getElementById('game-container');
-      const backBtn = document.getElementById('back-btn');
+      
+      let isPaused = false;
       
       function startGame() {
         landing.style.display = 'none';
         gameContainer.style.display = 'block';
-        backBtn.style.display = 'flex';
+        pauseBtn.style.display = 'flex';
+        isPaused = false;
+        pauseBtn.textContent = '⏸';
         window.dispatchEvent(new CustomEvent('startGame'));
       }
       
-      function goBack() {
-        landing.style.display = 'block';
-        gameContainer.style.display = 'none';
-        backBtn.style.display = 'none';
+      function togglePause() {
+        isPaused = !isPaused;
+        pauseBtn.textContent = isPaused ? '▶' : '⏸';
+        window.dispatchEvent(new CustomEvent('togglePause', { detail: isPaused }));
       }
       
       playBtn.addEventListener('click', startGame);
       finalPlayBtn.addEventListener('click', startGame);
-      backBtn.addEventListener('click', goBack);
+      pauseBtn.addEventListener('click', togglePause);
     </script>
   </body>
 </html>
