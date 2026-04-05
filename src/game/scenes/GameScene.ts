@@ -134,8 +134,8 @@ export class GameScene extends Phaser.Scene {
   private lastLandTime: number = 0;
   private comboTimeout: number = 2000; // ms to maintain combo
 
-  // Pause state - kept for reference but not used with Phaser scene.pause()
-  // private isPaused: boolean = false;
+  // Pause state
+  private isPaused: boolean = false;
 
   // Camera
   private cameraShakeTween?: Phaser.Tweens.Tween;
@@ -404,24 +404,25 @@ export class GameScene extends Phaser.Scene {
 
   // ─── Pause Control ─────────────────────────────────────────────────────────
   public setPaused(paused: boolean): void {
-    if (paused) {
-      // Use Phaser's scene pause - this properly freezes the scene
-      this.scene.pause();
-    } else {
-      // Resume the scene
-      this.scene.resume();
-    }
+    this.isPaused = paused;
+  }
+
+  public isPausedState(): boolean {
+    return this.isPaused;
   }
 
   // ─── Update ─────────────────────────────────────────────────────────────────
   update(_time: number, _delta: number): void {
-    // Don't update if game is over
-    if (this.isGameOver) return;
-    
-    // Update player
+    // Always update player so controls work
     if (this.player) {
       this.player.update(_time, _delta);
     }
+
+    // Skip game logic if paused
+    if (this.isPaused) return;
+
+    // Skip if game over
+    if (this.isGameOver) return;
 
     // Update platforms
     this.platforms.forEach(p => p.update(_delta));
