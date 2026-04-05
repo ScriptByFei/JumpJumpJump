@@ -239,38 +239,36 @@ export class GameScene extends Phaser.Scene {
 
   // ─── UI ─────────────────────────────────────────────────────────────────────
   private createUI(): void {
-    const padding = 20;
+    const padding = 24;
     const safeTop = this.getSafeAreaTop();
+    const safeLeft = this.getSafeAreaLeft();
 
-    // Score
-    this.scoreText = this.add.text(padding, safeTop + padding, '0', {
-      fontSize: '40px',
-      fontFamily: 'Arial Black, Arial, sans-serif',
+    // Score - large, bold, left-aligned
+    this.scoreText = this.add.text(safeLeft + padding, safeTop + padding, '0', {
+      fontSize: '64px',
+      fontFamily: 'Russo One, Arial Black, sans-serif',
       color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 4,
     });
+    this.scoreText.setOrigin(0, 0);
     this.scoreText.setDepth(1000);
 
-    // High score (top right)
+    // Combo - directly below score, 8px gap, 24px semibold, 85% opacity
+    this.comboText = this.add.text(safeLeft + padding, safeTop + padding + 72, '', {
+      fontSize: '24px',
+      fontFamily: 'Exo 2, Arial, sans-serif',
+      fontStyle: '600',
+      color: '#ffffff',
+    }).setOrigin(0, 0).setDepth(1000).setAlpha(0.85);
+
+    // High score (top right, subtle)
     this.highScoreText = this.add.text(GAME_WIDTH - padding, safeTop + padding, `Best: ${this.highScore}`, {
-      fontSize: '16px',
-      fontFamily: 'Arial, sans-serif',
+      fontSize: '14px',
+      fontFamily: 'Exo 2, Arial, sans-serif',
       color: '#' + COLORS.textMuted.toString(16).padStart(6, '0'),
-      stroke: '#000000',
-      strokeThickness: 2,
     }).setOrigin(1, 0);
     this.highScoreText.setDepth(1000);
 
-    // Combo text (below score, top left area)
-    const safeLeft = this.getSafeAreaLeft();
-    this.comboText = this.add.text(safeLeft + padding, safeTop + padding + 55, '', {
-      fontSize: '16px',
-      fontFamily: 'Arial, sans-serif',
-      color: '#aaaaaa',
-    }).setOrigin(0, 0).setDepth(1000).setAlpha(0);
-
-    // Touch controls hint (show briefly then fade)
+    // Touch controls hint
     this.createTouchHint();
   }
 
@@ -611,7 +609,7 @@ export class GameScene extends Phaser.Scene {
   private updateComboDisplay(): void {
     if (this.combo >= 1) {
       this.comboText.setText(`${this.combo}x`);
-      this.comboText.setAlpha(0.7);
+      this.comboText.setAlpha(0.85);
     } else {
       this.comboText.setAlpha(0);
     }
@@ -839,7 +837,7 @@ export class GameScene extends Phaser.Scene {
     const minY = Math.min(cameraTop + safeTop + 20, this.scoreText.y);
     this.scoreText.setY(minY);
     this.highScoreText.setY(minY);
-    this.comboText.setY(minY + 50);
+    this.comboText.setY(minY + 84);
   }
 
   // ─── Visual Effects ─────────────────────────────────────────────────────────
