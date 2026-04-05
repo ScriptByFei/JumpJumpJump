@@ -407,7 +407,7 @@ export class GameScene extends Phaser.Scene {
     this.isPaused = paused;
     
     if (paused) {
-      // Stop player physics and movement
+      // Stop player movement and disable collision
       if (this.player && this.player.body) {
         this.player.body.velocity.x = 0;
         this.player.body.velocity.y = 0;
@@ -415,22 +415,16 @@ export class GameScene extends Phaser.Scene {
       }
       // Pause all tweens
       this.tweens.pauseAll();
-      // Pause physics world
-      this.physics.world.pause();
     } else {
       // Resume player physics
       if (this.player && this.player.body) {
         this.player.body.enable = true;
-        // Reset velocity so player can move immediately
         this.player.body.velocity.x = 0;
         this.player.body.velocity.y = 0;
-        // Sync physics body with game object
         this.player.body.reset(this.player.x, this.player.y);
       }
       // Resume all tweens
       this.tweens.resumeAll();
-      // Resume physics world
-      this.physics.world.resume();
     }
   }
 
