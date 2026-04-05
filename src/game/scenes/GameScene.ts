@@ -181,8 +181,8 @@ export class GameScene extends Phaser.Scene {
     }));
     
     // Show HUD when game starts
-    const hudTop = document.getElementById('hud-top');
-    if (hudTop) hudTop.style.display = 'flex';
+    const gameHud = document.getElementById('game-hud');
+    if (gameHud) gameHud.style.display = 'block';
 
     // Background
     this.createBackground();
@@ -747,9 +747,9 @@ export class GameScene extends Phaser.Scene {
 
     // Hide HTML pause overlay and HUD when game ends
     const pauseOverlay = document.getElementById('pause-overlay');
-    const hudTop = document.getElementById('hud-top');
+    const gameHud = document.getElementById('game-hud');
     if (pauseOverlay) pauseOverlay.style.display = 'none';
-    if (hudTop) hudTop.style.display = 'none';
+    if (gameHud) gameHud.style.display = 'none';
 
     // Save high score
     if (this.score > this.highScore) {

@@ -377,57 +377,74 @@
       }
       
       /* ─── Game HUD ───────────────────────────────────────────────────────────── */
-      .hud-top {
+      .game-hud {
         position: fixed;
-        top: calc(env(safe-area-inset-top, 0px) + 10px);
-        left: calc(env(safe-area-inset-left, 0px) + 12px);
-        right: calc(env(safe-area-inset-right, 0px) + 12px);
+        top: calc(env(safe-area-inset-top, 0px) + 12px);
+        left: 12px;
+        right: 12px;
+        z-index: 1000;
+        pointer-events: none;
+        font-family: 'Russo One', Arial, sans-serif;
+      }
+      
+      .game-hud__row {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 12px;
-        z-index: 1000;
-        pointer-events: none;
       }
       
-      .hud-left {
+      .game-hud__row + .game-hud__row {
+        margin-top: 6px;
+      }
+      
+      /* Score block - left side */
+      .hud-score-block {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 2px;
         min-width: 0;
+        max-width: 55%;
       }
       
-      .hud-right {
+      .hud-score {
+        font-size: 36px;
+        color: #ffffff;
+        line-height: 1;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        word-break: break-all;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .hud-combo {
+        font-size: 16px;
+        color: #4ecdc4;
+        line-height: 1;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+        font-family: 'Exo 2', Arial, sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      
+      /* Right side controls */
+      .hud-controls {
         display: flex;
         align-items: center;
         gap: 10px;
         flex-shrink: 0;
       }
       
-      .score {
-        font-family: 'Russo One', Arial, sans-serif;
-        font-size: 44px;
-        color: white;
-        line-height: 1;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-      }
-      
-      .combo {
-        font-family: 'Russo One', Arial, sans-serif;
-        font-size: 22px;
-        color: #4ecdc4;
-        line-height: 1;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-      }
-      
-      .pause-btn {
+      /* Pause button - glass style */
+      .hud-pause {
         width: 44px;
         height: 44px;
-        background: rgba(0, 0, 0, 0.55);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(20, 20, 30, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 12px;
-        color: white;
-        font-size: 16px;
+        color: #ffffff;
+        font-size: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -436,44 +453,54 @@
         -webkit-appearance: none;
         appearance: none;
         outline: none;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+        box-shadow: 
+          0 4px 12px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
         flex-shrink: 0;
+        transition: transform 0.1s ease, background 0.1s ease;
       }
       
-      .pause-btn:active {
-        background: rgba(0, 0, 0, 0.75);
-        transform: scale(0.95);
+      .hud-pause:active {
+        transform: scale(0.92);
+        background: rgba(40, 40, 50, 0.7);
       }
       
-      .best-score-card {
+      /* Best score card */
+      .hud-best {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 8px 14px;
-        background: rgba(0, 0, 0, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        justify-content: center;
+        padding: 6px 12px;
+        background: rgba(20, 20, 30, 0.5);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(254, 202, 87, 0.25);
         border-radius: 10px;
-        min-width: 70px;
-        max-width: 90px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        min-width: 60px;
+        max-width: 80px;
+        box-shadow: 
+          0 4px 12px rgba(0, 0, 0, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
       }
       
-      .best-score-card .label {
+      .hud-best__label {
         font-family: 'Exo 2', Arial, sans-serif;
-        font-size: 10px;
-        font-weight: 600;
-        color: #9ba3b5;
+        font-size: 9px;
+        font-weight: 700;
+        color: rgba(254, 202, 87, 0.7);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
+        line-height: 1;
       }
       
-      .best-score-card .value {
-        font-family: 'Russo One', Arial, sans-serif;
-        font-size: 20px;
+      .hud-best__value {
+        font-size: 18px;
         color: #feca57;
         line-height: 1.2;
+        margin-top: 2px;
       }
     </style>
   </head>
@@ -564,17 +591,24 @@
     </div>
 
     <!-- Game HUD -->
-    <div class="hud-top" id="hud-top" style="display: none;">
-      <div class="hud-left">
-        <div class="score" id="hud-score">0</div>
-        <div class="combo" id="hud-combo" style="display: none;">COMBO ×1</div>
-      </div>
-      <div class="hud-right">
-        <button class="pause-btn" id="pause-btn" aria-label="Pause">II</button>
-        <div class="best-score-card">
-          <div class="label">BEST</div>
-          <div class="value" id="hud-best">0</div>
+    <div class="game-hud" id="game-hud" style="display: none;">
+      <!-- Row 1: Score left, Pause + Best right -->
+      <div class="game-hud__row">
+        <div class="hud-score-block">
+          <div class="hud-score" id="hud-score">0</div>
         </div>
+        <div class="hud-controls">
+          <button class="hud-pause" id="hud-pause" aria-label="Pause">II</button>
+          <div class="hud-best">
+            <div class="hud-best__label">BEST</div>
+            <div class="hud-best__value" id="hud-best">0</div>
+          </div>
+        </div>
+      </div>
+      <!-- Row 2: Combo left aligned under score -->
+      <div class="game-hud__row">
+        <div class="hud-combo" id="hud-combo" style="display: none;">COMBO ×1</div>
+        <div style="flex: 1;"></div>
       </div>
     </div>
 
@@ -586,8 +620,8 @@
     <script>
       const playBtn = document.getElementById('play-btn');
       const finalPlayBtn = document.getElementById('final-play-btn');
-      const pauseBtn = document.getElementById('pause-btn');
-      const hudTop = document.getElementById('hud-top');
+      const hudPause = document.getElementById('hud-pause');
+      const gameHud = document.getElementById('game-hud');
       const hudScore = document.getElementById('hud-score');
       const hudCombo = document.getElementById('hud-combo');
       const hudBest = document.getElementById('hud-best');
@@ -601,7 +635,7 @@
       function startGame() {
         landing.style.display = 'none';
         gameContainer.style.display = 'block';
-        hudTop.style.display = 'flex';
+        gameHud.style.display = 'block';
         isPaused = false;
         window.dispatchEvent(new CustomEvent('startGame'));
       }
@@ -678,8 +712,8 @@
       if (restartBtn) restartBtn.addEventListener('click', restartGame);
       
       // Pause button
-      pauseBtn.addEventListener('click', togglePause);
-      pauseBtn.addEventListener('touchend', function(e) {
+      hudPause.addEventListener('click', togglePause);
+      hudPause.addEventListener('touchend', function(e) {
         e.preventDefault();
         togglePause();
       });
