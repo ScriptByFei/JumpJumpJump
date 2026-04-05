@@ -488,20 +488,21 @@ export class GameScene extends Phaser.Scene {
   public setPaused(paused: boolean): void {
     this.isPaused = paused;
     
-    // Also pause/unpause the physics world
-    if (paused) {
-      this.physics.pause();
-    } else {
-      this.physics.resume();
+    // Stop all velocity when pausing - player stays frozen
+    if (paused && this.player && this.player.body) {
+      this.player.body.velocity.x = 0;
+      this.player.body.velocity.y = 0;
     }
   }
 
   // ─── Update ─────────────────────────────────────────────────────────────────
   update(_time: number, _delta: number): void {
+    // Always allow player to update input - this fixes the "can't control after pause" bug
+    if (this.player) {
+      this.player.update(_time, _delta);
+    }
+    
     if (this.isGameOver || this.isPaused) return;
-
-    // Update player
-    this.player.update(_time, _delta);
 
     // Update platforms
     this.platforms.forEach(p => p.update(_delta));
