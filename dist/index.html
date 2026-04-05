@@ -4,22 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     
-    <!-- iOS PWA Support -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="JumpJumpJump" />
     
-    <!-- Theme -->
     <meta name="theme-color" content="#0a0a14" />
     <meta name="format-detection" content="telephone=no" />
     
     <title>JumpJumpJump — Arcade Platformer</title>
     <meta name="description" content="A fast, touch-first platformer built for sharp reflexes and short addictive runs." />
     
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230f0f1a' width='100' height='100' rx='20'/><circle fill='%234ecdc4' cx='50' cy='50' r='30'/><circle fill='%23e94560' cx='50' cy='45' r='20'/></svg>" />
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
@@ -75,29 +71,71 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
-        align-items: center;
-        padding: 40px 24px;
+        text-align: center;
+        padding: 60px 0 40px;
         background: linear-gradient(180deg, var(--bg-dark) 0%, #0f0f1a 100%);
+        position: relative;
+        overflow: hidden;
       }
       
-      .hero-content {
-        width: 100%;
-        max-width: 320px;
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 300px;
+        height: 300px;
+        background: var(--accent);
+        filter: blur(120px);
+        opacity: 0.08;
+        pointer-events: none;
+      }
+      
+      .eyebrow {
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: var(--accent);
+        margin-bottom: 16px;
+      }
+      
+      .headline {
+        font-family: 'Russo One', sans-serif;
+        font-size: 42px;
+        line-height: 1.1;
+        margin-bottom: 20px;
+      }
+      
+      .subheadline {
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        margin-bottom: 36px;
+        padding: 0 8px;
+      }
+      
+      .hero-ctas {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 48px;
       }
       
       .btn-primary {
         display: block;
         width: 100%;
-        padding: 20px 32px;
+        padding: 18px 32px;
         background: var(--accent);
         color: var(--bg-dark);
         font-family: 'Russo One', sans-serif;
-        font-size: 20px;
+        font-size: 18px;
         text-decoration: none;
         border-radius: 16px;
         border: none;
         cursor: pointer;
-        transition: transform 0.15s ease;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
       }
       
       .btn-primary:hover {
@@ -108,7 +146,202 @@
         transform: scale(0.98);
       }
       
-      /* ─── Game Container (hidden until game starts) ─── */
+      .btn-secondary {
+        display: block;
+        width: 100%;
+        padding: 18px 32px;
+        background: transparent;
+        color: var(--text-primary);
+        font-family: 'Exo 2', sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 16px;
+        border: 2px solid rgba(255,255,255,0.15);
+        cursor: pointer;
+        transition: border-color 0.15s ease, background 0.15s ease;
+      }
+      
+      .btn-secondary:hover {
+        border-color: rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.05);
+      }
+      
+      .btn-secondary:active {
+        background: rgba(255,255,255,0.08);
+      }
+      
+      /* Preview Card */
+      .preview-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        padding: 20px;
+        border: 1px solid rgba(255,255,255,0.06);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .preview-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        opacity: 0.3;
+      }
+      
+      .preview-screen {
+        width: 100%;
+        aspect-ratio: 9/16;
+        max-height: 280px;
+        background: linear-gradient(180deg, #0f0f1a 0%, #12121f 100%);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      
+      .preview-ball {
+        width: 48px;
+        height: 48px;
+        background: var(--danger);
+        border-radius: 50%;
+        box-shadow: 0 0 30px rgba(233, 69, 96, 0.4);
+        animation: bounce 1.2s ease-in-out infinite;
+      }
+      
+      .preview-platform {
+        width: 80px;
+        height: 12px;
+        background: var(--accent);
+        border-radius: 6px;
+        opacity: 0.6;
+      }
+      
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-20px); }
+      }
+      
+      .preview-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 12px;
+        text-align: center;
+      }
+      
+      /* ─── Features ─── */
+      .features {
+        padding: 80px 0;
+      }
+      
+      .section-title {
+        font-family: 'Russo One', sans-serif;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        color: var(--text-muted);
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      
+      .feature-cards {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      
+      .feature-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 28px 24px;
+        border: 1px solid rgba(255,255,255,0.06);
+        text-align: center;
+      }
+      
+      .feature-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--accent-glow);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        font-size: 24px;
+      }
+      
+      .feature-title {
+        font-family: 'Russo One', sans-serif;
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+      
+      .feature-desc {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+      }
+      
+      /* ─── Gameplay ─── */
+      .gameplay {
+        padding: 80px 0;
+        text-align: center;
+      }
+      
+      .gameplay-title {
+        font-family: 'Russo One', sans-serif;
+        font-size: 32px;
+        margin-bottom: 20px;
+      }
+      
+      .gameplay-text {
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--text-secondary);
+        max-width: 340px;
+        margin: 0 auto;
+      }
+      
+      /* ─── Final CTA ─── */
+      .final-cta {
+        padding: 100px 0 120px;
+        text-align: center;
+        background: linear-gradient(180deg, transparent 0%, rgba(78,205,196,0.03) 100%);
+      }
+      
+      .final-cta-title {
+        font-family: 'Russo One', sans-serif;
+        font-size: 36px;
+        margin-bottom: 16px;
+      }
+      
+      .final-cta-text {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin-bottom: 32px;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      
+      /* ─── Footer ─── */
+      .footer {
+        padding: 32px 0;
+        text-align: center;
+        border-top: 1px solid rgba(255,255,255,0.06);
+      }
+      
+      .footer-text {
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+      
+      /* ─── Game Container ─── */
       #game-container {
         display: none;
         position: fixed;
@@ -143,7 +376,7 @@
         backdrop-filter: blur(10px);
       }
     </style>
-    <script type="module" crossorigin src="./assets/index-B9nY-Mpx.js"></script>
+    <script type="module" crossorigin src="./assets/index-C6jJh-qn.js"></script>
   <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
   <body>
     <!-- Landing Page -->
@@ -151,11 +384,75 @@
       <!-- Hero -->
       <section class="hero">
         <div class="container">
-          <div class="hero-content">
+          <p class="eyebrow">Arcade Platformer</p>
+          <h1 class="headline">Spring. Dodge.<br>Survive.</h1>
+          <p class="subheadline">A fast, touch-first platformer built for sharp reflexes, tight timing and short addictive runs.</p>
+          
+          <div class="hero-ctas">
             <button class="btn-primary" id="play-btn">Jetzt spielen</button>
+          </div>
+          
+          <div class="preview-card">
+            <div class="preview-screen">
+              <div class="preview-ball"></div>
+              <div class="preview-platform"></div>
+              <div class="preview-platform" style="width: 60px;"></div>
+            </div>
+            <p class="preview-label">Tap left or right to jump</p>
           </div>
         </div>
       </section>
+      
+      <!-- Features -->
+      <section class="features">
+        <div class="container">
+          <p class="section-title">Features</p>
+          
+          <div class="feature-cards">
+            <div class="feature-card">
+              <div class="feature-icon">👆</div>
+              <h3 class="feature-title">Touch-first Controls</h3>
+              <p class="feature-desc">Simple tap controls optimized for mobile. Left or right — that's all you need.</p>
+            </div>
+            
+            <div class="feature-card">
+              <div class="feature-icon">🔄</div>
+              <h3 class="feature-title">Instant Retry Loop</h3>
+              <p class="feature-desc">Fail. Restart. Try again. Every run takes just seconds, perfect for short sessions.</p>
+            </div>
+            
+            <div class="feature-card">
+              <div class="feature-icon">🎯</div>
+              <h3 class="feature-title">Pure Arcade Focus</h3>
+              <p class="feature-desc">No fillers, no complexity. Just you, platforms and your high score.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Gameplay -->
+      <section class="gameplay">
+        <div class="container">
+          <h2 class="gameplay-title">Easy to start.<br>Hard to master.</h2>
+          <p class="gameplay-text">Every run is simple to understand and hard to perfect. Tight jumps, quick reactions and constant momentum turn every attempt into a score chase.</p>
+        </div>
+      </section>
+      
+      <!-- Final CTA -->
+      <section class="final-cta">
+        <div class="container">
+          <h2 class="final-cta-title">Ready for the next run?</h2>
+          <p class="final-cta-text">Jump in, test your timing and see how far you can go.</p>
+          <button class="btn-primary" id="final-play-btn">Jetzt spielen</button>
+        </div>
+      </section>
+      
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="container">
+          <p class="footer-text">© 2026 JumpJumpJump</p>
+        </div>
+      </footer>
     </main>
     
     <!-- Game Container -->
@@ -165,6 +462,7 @@
     <!-- Game Script -->
     <script>
       const playBtn = document.getElementById('play-btn');
+      const finalPlayBtn = document.getElementById('final-play-btn');
       const landing = document.getElementById('landing');
       const gameContainer = document.getElementById('game-container');
       const backBtn = document.getElementById('back-btn');
@@ -183,6 +481,7 @@
       }
       
       playBtn.addEventListener('click', startGame);
+      finalPlayBtn.addEventListener('click', startGame);
       backBtn.addEventListener('click', goBack);
     </script>
   </body>

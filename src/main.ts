@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { BootScene } from './game/scenes/BootScene';
-import { MenuScene } from './game/scenes/MenuScene';
 import { GameScene } from './game/scenes/GameScene';
 import { GameOverScene } from './game/scenes/GameOverScene';
 import { GAME_WIDTH, GAME_HEIGHT } from './game/config';
@@ -18,36 +17,37 @@ const config: Phaser.Types.Core.GameConfig = {
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    // Ensure canvas doesn't get too large on desktop
     max: {
       width: 800,
       height: 1400,
     },
   },
-  scene: [BootScene, MenuScene, GameScene, GameOverScene],
-  // No physics config - we handle gravity in Player class for more control
+  scene: [BootScene, GameScene, GameOverScene],
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { x: 0, y: 0 }, // We apply gravity manually in Player
+      gravity: { x: 0, y: 0 },
       debug: false,
     },
   },
-  // Prevent context menu on right-click
   disableContextMenu: true,
-  // Audio settings
   audio: {
-    noAudio: true, // No audio in this version
+    noAudio: true,
   },
 };
 
-// Hide loading screen when Phaser is ready
-const game = new Phaser.Game(config);
+// Game instance
+let game: Phaser.Game | null = null;
 
-game.events.on('ready', () => {
-  const loadingEl = document.getElementById('loading');
-  if (loadingEl) {
-    loadingEl.classList.add('hidden');
-    setTimeout(() => loadingEl.remove(), 300);
+// Start game function
+function startGame() {
+  if (game) {
+    game.destroy(true);
   }
-});
+  game = new Phaser.Game(config);
+}
+
+// Listen for startGame event from landing page
+window.addEventListener('startGame', startGame);
+
+// Don't auto-start - landing page controls when to start
