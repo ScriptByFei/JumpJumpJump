@@ -10,6 +10,13 @@ import { GAME_WIDTH, GAME_HEIGHT } from './game/config';
 
 let gameInstance: Phaser.Game | null = null;
 
+// Expose for HTML overlay pause button
+declare global {
+  interface Window {
+    setGamePaused: (paused: boolean) => void;
+  }
+}
+
 const config: Phaser.Types.Core.GameConfig = {
   width: GAME_WIDTH,
   height: GAME_HEIGHT,
@@ -50,18 +57,19 @@ function startGame() {
   }
 }
 
-// Listen for togglePause event from HTML overlay
-function handleTogglePause(event: Event) {
-  const customEvent = event as CustomEvent<boolean>;
-  const isPaused = customEvent.detail;
-  if (gameInstance && gameInstance.scene && gameInstance.scene.scenes.length > 0) {
-    const activeScene = gameInstance.scene.scenes.find(s => s.scene.isActive() && s.scene.isVisible());
-    if (activeScene && 'setPaused' in activeScene) {
-      (activeScene as any).setPaused(isPaused);
+// Set pause state - exposed globally for HTML button
+window.setGamePaused = function(paused: boolean) {
+  console.log('setGamePaused called:', paused, 'gameInstance:', !!gameInstance);
+  if (gameInstance) {
+    const scenes = gameInstance.scene.scenes;
+    for (const scene of scenes) {
+      if (scene.scene.isActive() && 'setPaused' in scene) {
+        (scene as any).setPaused(paused);
+        console.log('Paused scene:', scene.scene.key);
+      }
     }
   }
-}
+};
 
 // Listen for startGame event from landing page
 window.addEventListener('startGame', startGame);
-window.addEventListener('togglePause', handleTogglePause);

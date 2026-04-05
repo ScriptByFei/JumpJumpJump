@@ -510,7 +510,10 @@
       function togglePause() {
         isPaused = !isPaused;
         pauseBtn.textContent = isPaused ? '▶' : '⏸';
-        window.dispatchEvent(new CustomEvent('togglePause', { detail: isPaused }));
+        // Call exposed function directly
+        if (typeof window.setGamePaused === 'function') {
+          window.setGamePaused(isPaused);
+        }
       }
       
       playBtn.addEventListener('click', startGame);
