@@ -70,12 +70,12 @@ window.setGamePaused = function(paused: boolean) {
   
   // Show/hide HTML pause overlay
   const overlay = document.getElementById('pause-overlay');
-  const pauseBtn = document.getElementById('pause-btn');
+  const pauseBtn = document.getElementById('hud-pause');
   if (overlay) {
     overlay.style.display = paused ? 'flex' : 'none';
   }
   if (pauseBtn) {
-    pauseBtn.textContent = paused ? '▶' : '⏸';
+    pauseBtn.textContent = paused ? '▶' : 'II';
   }
 };
 
