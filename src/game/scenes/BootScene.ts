@@ -2,30 +2,122 @@ import Phaser from 'phaser';
 import { COLORS } from '../config';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Boot Scene - Creates all game textures programmatically
+// Boot Scene - Creates all game textures programmatically with loading screen
 // ═══════════════════════════════════════════════════════════════════════════════
 export class BootScene extends Phaser.Scene {
+  private loadingBar!: Phaser.GameObjects.Graphics;
+  private loadingText!: Phaser.GameObjects.Text;
+  private progress: number = 0;
+  private totalSteps: number = 8;
+  private currentStep: number = 0;
+
   constructor() {
     super({ key: 'BootScene' });
   }
 
   preload(): void {
-    // We create all textures in create(), not preload
+    // Create loading UI
+    this.createLoadingUI();
+  }
+
+  private createLoadingUI(): void {
+    // Dark background
+    this.cameras.main.setBackgroundColor(0x0f0f1a);
+
+    // Loading bar background
+    const barWidth = 200;
+    const barHeight = 12;
+    const barX = 400 / 2 - barWidth / 2;
+    const barY = 700 / 2 + 50;
+
+    this.loadingBar = this.add.graphics();
+    this.loadingBar.fillStyle(0x2a2a3e, 1);
+    this.loadingBar.fillRoundedRect(barX, barY, barWidth, barHeight, 6);
+
+    // Loading text
+    this.loadingText = this.add.text(400 / 2, barY - 30, 'Loading...', {
+      fontSize: '16px',
+      fontFamily: 'Arial, sans-serif',
+      color: '#8b90a5',
+    }).setOrigin(0.5);
+
+    // Title
+    this.add.text(400 / 2, 700 / 2 - 50, 'JumpJumpJump', {
+      fontSize: '32px',
+      fontFamily: 'Arial, sans-serif',
+      color: '#4ecdc4',
+      fontStyle: 'bold',
+    }).setOrigin(0.5);
+  }
+
+  private updateLoadingBar(): void {
+    this.currentStep++;
+    this.progress = this.currentStep / this.totalSteps;
+
+    const barWidth = 200;
+    const barHeight = 12;
+    const barX = 400 / 2 - barWidth / 2;
+    const barY = 700 / 2 + 50;
+
+    this.loadingBar.clear();
+    this.loadingBar.fillStyle(0x2a2a3e, 1);
+    this.loadingBar.fillRoundedRect(barX, barY, barWidth, barHeight, 6);
+
+    this.loadingBar.fillStyle(0x4ecdc4, 1);
+    this.loadingBar.fillRoundedRect(barX, barY, barWidth * this.progress, barHeight, 6);
+  }
+
+  private scheduleNextStep(fn: () => void): void {
+    // Use requestAnimationFrame to give iOS time to render
+    this.time.delayedCall(16, fn); // ~1 frame at 60fps
   }
 
   create(): void {
-    this.createPlayerTexture();
-    this.createPlatformNormal();
-    this.createPlatformMoving();
-    this.createPlatformBreakable();
-    this.createPlatformBoost();
-    this.createPlatformCloud();
-    this.createParticleTextures();
-    this.createButtonTextures();
-    
-    // Transition to game after textures are ready
-    this.time.delayedCall(100, () => {
-      this.scene.start('GameScene');
+    // Stagger texture creation to avoid frame drops on mobile
+    this.scheduleNextStep(() => {
+      this.createPlayerTexture();
+      this.updateLoadingBar();
+
+      this.scheduleNextStep(() => {
+        this.createPlatformNormal();
+        this.updateLoadingBar();
+
+        this.scheduleNextStep(() => {
+          this.createPlatformMoving();
+          this.updateLoadingBar();
+
+          this.scheduleNextStep(() => {
+            this.createPlatformBreakable();
+            this.updateLoadingBar();
+
+            this.scheduleNextStep(() => {
+              this.createPlatformBoost();
+              this.updateLoadingBar();
+
+              this.scheduleNextStep(() => {
+                this.createPlatformCloud();
+                this.updateLoadingBar();
+
+                this.scheduleNextStep(() => {
+                  this.createParticleTextures();
+                  this.updateLoadingBar();
+
+                  this.scheduleNextStep(() => {
+                    this.createButtonTextures();
+                    this.updateLoadingBar();
+
+                    // Small delay then start game
+                    this.loadingText.setText('Ready!');
+                    this.time.delayedCall(200, () => {
+                      this.scene.start('GameScene');
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
     });
   }
 

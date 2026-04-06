@@ -238,8 +238,8 @@ export class GameScene extends Phaser.Scene {
     this.updateBackgroundGradient(0);
     this.bgGradient.setDepth(-100);
 
-    // Parallax stars
-    for (let i = 0; i < 60; i++) {
+    // Parallax stars - reduced count for faster mobile startup
+    for (let i = 0; i < 30; i++) {
       const star = this.add.star(
         Phaser.Math.Between(0, GAME_WIDTH),
         Phaser.Math.Between(-5000, GAME_HEIGHT),
@@ -332,9 +332,9 @@ export class GameScene extends Phaser.Scene {
     // Starting platform (always normal, centered)
     this.createPlatform(GAME_WIDTH / 2, GAME_HEIGHT - 60, 'normal');
 
-    // Generate initial platforms going up with bigger gaps initially
+    // Generate initial platforms going up - reduced count for faster startup
     let y = GAME_HEIGHT - 130;
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 8; i++) { // Reduced from 15
       // First few platforms have larger gaps to make death possible
       const baseGap = i < 5 ? 70 + i * 10 : this.getGapForHeight(-y);
       y -= baseGap;
