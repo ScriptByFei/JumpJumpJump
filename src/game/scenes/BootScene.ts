@@ -72,6 +72,25 @@ export class BootScene extends Phaser.Scene {
     this.time.delayedCall(16, fn); // ~1 frame at 60fps
   }
 
+  private warmupJIT(): void {
+    // Warm up JIT by running dummy Phaser operations
+    // This helps iOS Safari/WebView compile JS faster
+    const dummyGraphics = this.add.graphics();
+    dummyGraphics.fillStyle(0xffffff, 1);
+    for (let i = 0; i < 100; i++) {
+      dummyGraphics.fillRect(Math.random() * 400, Math.random() * 700, 10, 10);
+    }
+    dummyGraphics.destroy();
+
+    // Do some math operations to help JIT (use results to avoid dead code elimination)
+    let result = 0;
+    for (let i = 0; i < 1000; i++) {
+      result += Math.sin(i) * Math.cos(i);
+    }
+    // Touch result so it's not optimized away
+    if (result === result) console.log('JIT warmup complete');
+  }
+
   create(): void {
     // Stagger texture creation to avoid frame drops on mobile
     this.scheduleNextStep(() => {
@@ -105,6 +124,9 @@ export class BootScene extends Phaser.Scene {
                   this.scheduleNextStep(() => {
                     this.createButtonTextures();
                     this.updateLoadingBar();
+
+                    // JIT warmup before starting game
+                    this.warmupJIT();
 
                     // Small delay then start game
                     this.loadingText.setText('Ready!');

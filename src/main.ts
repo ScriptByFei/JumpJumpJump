@@ -40,9 +40,20 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
+  fps: {
+    target: 60,
+    min: 30,
+    forceSetTimeOut: false,
+    smoothStep: true,
+  },
   disableContextMenu: true,
   audio: {
     noAudio: true,
+  },
+  render: {
+    antialias: false,
+    pixelArt: false,
+    roundPixels: true,
   },
 };
 
