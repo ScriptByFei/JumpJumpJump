@@ -204,6 +204,89 @@ export const GUN = {
   FIRE_COOLDOWN: 250, // ms between shots
 };
 
+// ─── Biomes ──────────────────────────────────────────────────────────────────
+export type BiomeId = 'space' | 'clouds' | 'lava' | 'ocean' | 'void';
+
+export interface Biome {
+  id: BiomeId;
+  name: string;
+  threshold: number;        // Height where this biome starts
+  topColor: number;          // Gradient top color
+  bottomColor: number;       // Gradient bottom color
+  starColor: number;        // Star/twinkle color
+  particleColor: number;     // Ambient floating particles
+  particleType: 'circle' | 'star' | 'snow';
+  platformTint?: number;     // Optional tint applied to platforms
+  musicMood?: string;        // Reserved for future audio
+}
+
+export const BIOMES: Biome[] = [
+  {
+    id: 'space',
+    name: '🌌 Deep Space',
+    threshold: 0,
+    topColor: 0x0a0a1a,
+    bottomColor: 0x1a1a3a,
+    starColor: 0xffffff,
+    particleColor: 0x6b5b95,
+    particleType: 'circle',
+  },
+  {
+    id: 'clouds',
+    name: '☁️ Cloud Zone',
+    threshold: 3000,
+    topColor: 0x2d4a6e,
+    bottomColor: 0x5a7fa8,
+    starColor: 0xffe4b5,
+    particleColor: 0xadd8e6,
+    particleType: 'snow',
+  },
+  {
+    id: 'lava',
+    name: '🌋 Lava World',
+    threshold: 7000,
+    topColor: 0x1a0a00,
+    bottomColor: 0x4a1500,
+    starColor: 0xff4500,
+    particleColor: 0xff6347,
+    particleType: 'circle',
+    platformTint: 0xff4500,
+  },
+  {
+    id: 'ocean',
+    name: '🌊 Underwater',
+    threshold: 12000,
+    topColor: 0x001a2e,
+    bottomColor: 0x003366,
+    starColor: 0x00ffff,
+    particleColor: 0x00bfff,
+    particleType: 'snow',
+  },
+  {
+    id: 'void',
+    name: '⚫ The Void',
+    threshold: 18000,
+    topColor: 0x000000,
+    bottomColor: 0x0a0010,
+    starColor: 0xff00ff,
+    particleColor: 0x8b008b,
+    particleType: 'star',
+    platformTint: 0x9400d3,
+  },
+];
+
+export function getBiomeForHeight(height: number): Biome {
+  let currentBiome = BIOMES[0];
+  for (const biome of BIOMES) {
+    if (height >= biome.threshold) {
+      currentBiome = biome;
+    } else {
+      break;
+    }
+  }
+  return currentBiome;
+}
+
 // ─── Safe Area (will be calculated at runtime) ───────────────────────────────
 export let SAFE_AREA = {
   top: 0,

@@ -405,10 +405,20 @@
         min-width: 0;
         max-width: 55%;
       }
-      
-      .hud-score {
+
+      .hud-height {
         font-size: 36px;
         color: #ffffff;
+        line-height: 1;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        word-break: break-all;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .hud-score {
+        font-size: 16px;
+        color: #feca57;
         line-height: 1;
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
         word-break: break-all;
@@ -470,7 +480,7 @@
         margin-top: 2px;
       }
     </style>
-    <script type="module" crossorigin src="./assets/index-CmO7paBJ.js"></script>
+    <script type="module" crossorigin src="./assets/index-CHadi_dB.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/phaser-Djlc-wBJ.js">
   <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
   <body>
@@ -552,10 +562,11 @@
 
     <!-- Game HUD -->
     <div class="game-hud" id="game-hud" style="display: none;">
-      <!-- Row 1: Score left, Pause + Best right -->
+      <!-- Row 1: Height + Score left, Best right -->
       <div class="game-hud__row">
         <div class="hud-score-block">
-          <div class="hud-score" id="hud-score">0</div>
+          <div class="hud-height" id="hud-height">0m</div>
+          <div class="hud-score" id="hud-score">0 pts</div>
         </div>
         <div class="hud-controls">
           <div class="hud-best">
@@ -579,6 +590,7 @@
       const playBtn = document.getElementById('play-btn');
       const finalPlayBtn = document.getElementById('final-play-btn');
       const gameHud = document.getElementById('game-hud');
+      const hudHeight = document.getElementById('hud-height');
       const hudScore = document.getElementById('hud-score');
       const hudCombo = document.getElementById('hud-combo');
       const hudBest = document.getElementById('hud-best');
@@ -602,11 +614,16 @@
         }
       }
       
+      // Update HUD height from game
+      function updateHeight(height) {
+        if (hudHeight) hudHeight.textContent = height + 'm';
+      }
+
       // Update HUD score from game
       function updateScore(score) {
         currentScore = score;
-        if (hudScore) hudScore.textContent = score.toString();
-        
+        if (hudScore) hudScore.textContent = score.toString() + ' pts';
+
         // Update best if beaten
         if (score > currentBest) {
           currentBest = score;
@@ -634,7 +651,8 @@
       
       // Listen for score/combo updates from game
       window.addEventListener('updateHUD', (e) => {
-        const { score, combo, best } = e.detail;
+        const { score, height, combo, best } = e.detail;
+        if (height !== undefined) updateHeight(height);
         if (score !== undefined) updateScore(score);
         if (combo !== undefined) updateCombo(combo);
         if (best !== undefined) setBestScore(best);

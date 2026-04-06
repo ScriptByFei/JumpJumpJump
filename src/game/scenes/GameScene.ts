@@ -16,6 +16,9 @@ import {
   PowerupType,
   ENEMY,
   EnemyType,
+  BIOMES,
+  getBiomeForHeight,
+  Biome,
 } from '../config';
 import { Player } from '../objects/Player';
 import { Platform } from '../objects/Platform';
@@ -160,6 +163,9 @@ export class GameScene extends Phaser.Scene {
   // Background elements
   private stars: Phaser.GameObjects.Star[] = [];
   private bgGradient!: Phaser.GameObjects.Graphics;
+  private ambientParticles: Phaser.GameObjects.Particles.ParticleEmitter[] = [];
+  private currentBiome: Biome = BIOMES[0];
+  private lastBiomeId: string = 'space';
 
   // Sound
   private soundManager = new SoundManager();
@@ -205,6 +211,7 @@ export class GameScene extends Phaser.Scene {
     window.dispatchEvent(new CustomEvent('updateHUD', {
       detail: { 
         score: 0,
+        height: 0,
         combo: 0,
         best: this.highScore
       }
@@ -254,34 +261,157 @@ export class GameScene extends Phaser.Scene {
         Phaser.Math.Between(3, 5),
         1,
         2,
-        0xffffff
+        this.currentBiome.starColor
       );
       star.setAlpha(Phaser.Math.FloatBetween(0.3, 1));
       star.setScale(Phaser.Math.FloatBetween(0.2, 1));
       star.setDepth(-50);
       this.stars.push(star);
     }
+
+    // Ambient particles for current biome
+    this.createAmbientParticles();
+  }
+
+  private createAmbientParticles(): void {
+    // Remove old particles
+    this.ambientParticles.forEach(p => p.destroy());
+    this.ambientParticles = [];
+
+    const texture = this.currentBiome.particleType === 'star' ? 'particle_star' : 'particle_circle';
+
+    // Create ambient particles that float around
+    const emitter = this.add.particles(0, 0, texture, {
+      x: { min: 0, max: GAME_WIDTH },
+      y: { min: -5000, max: GAME_HEIGHT },
+      scale: { start: 0.15, end: 0.05 },
+      alpha: { start: 0.4, end: 0 },
+      tint: this.currentBiome.particleColor,
+      speed: { min: 5, max: 25 },
+      angle: { min: 80, max: 100 },
+      frequency: 200,
+      lifespan: 4000,
+      quantity: 1,
+    });
+    emitter.setDepth(-40);
+    this.ambientParticles.push(emitter);
   }
 
   private updateBackgroundGradient(height: number): void {
-    // Gradually shift colors as player goes higher
-    const progress = Math.min(height / 15000, 1);
+    // Check for biome transition
+    const newBiome = getBiomeForHeight(height);
     
-    // Interpolate from dark blue to purple to pink
-    const topR = Math.floor(Phaser.Math.Linear(0x1a, 0x6b, progress));
-    const topG = Math.floor(Phaser.Math.Linear(0x1a, 0x21, progress));
-    const topB = Math.floor(Phaser.Math.Linear(0x2e, 0x8b, progress));
+    if (newBiome.id !== this.lastBiomeId) {
+      this.triggerBiomeTransition(newBiome);
+    }
+
+    // Use current biome colors with smooth blend based on progress within biome
+    const biomeIndex = BIOMES.indexOf(newBiome);
+    const nextBiome = BIOMES[biomeIndex + 1];
     
-    const botR = Math.floor(Phaser.Math.Linear(0x0f, 0x2d, progress));
-    const botG = Math.floor(Phaser.Math.Linear(0x0f, 0x1a, progress));
-    const botB = Math.floor(Phaser.Math.Linear(0x1a, 0x4a, progress));
+    let topColor: number;
+    let botColor: number;
     
-    const topColor = (topR << 16) | (topG << 8) | topB;
-    const botColor = (botR << 16) | (botG << 8) | botB;
+    if (nextBiome) {
+      const biomeRange = nextBiome.threshold - newBiome.threshold;
+      const progressInBiome = Math.min((height - newBiome.threshold) / biomeRange, 1);
+      
+      // Blend toward next biome colors
+      const blendFactor = Math.pow(progressInBiome, 0.5); // Ease-in for smoother transition
+      
+      const topColorObj = Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.ValueToColor(newBiome.topColor),
+        Phaser.Display.Color.ValueToColor(nextBiome.topColor),
+        100,
+        blendFactor
+      );
+      const botColorObj = Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.ValueToColor(newBiome.bottomColor),
+        Phaser.Display.Color.ValueToColor(nextBiome.bottomColor),
+        100,
+        blendFactor
+      );
+      topColor = Phaser.Display.Color.GetColor(topColorObj.r, topColorObj.g, topColorObj.b);
+      botColor = Phaser.Display.Color.GetColor(botColorObj.r, botColorObj.g, botColorObj.b);
+    } else {
+      // At max biome, use its colors
+      topColor = newBiome.topColor;
+      botColor = newBiome.bottomColor;
+    }
     
     this.bgGradient.clear();
     this.bgGradient.fillGradientStyle(topColor, topColor, botColor, botColor, 1);
     this.bgGradient.fillRect(0, -10000, GAME_WIDTH, 20000);
+  }
+
+  private triggerBiomeTransition(newBiome: Biome): void {
+    this.lastBiomeId = newBiome.id;
+    this.currentBiome = newBiome;
+
+    // Update star colors
+    this.stars.forEach(star => {
+      this.tweens.add({
+        targets: star,
+        alpha: 0,
+        duration: 300,
+        onComplete: () => {
+          star.setFillStyle(newBiome.starColor);
+          this.tweens.add({
+            targets: star,
+            alpha: Phaser.Math.FloatBetween(0.3, 1),
+            duration: 300,
+          });
+        },
+      });
+    });
+
+    // Recreate ambient particles for new biome
+    this.createAmbientParticles();
+
+    // Flash effect for biome transition
+    const r = (newBiome.topColor >> 16) & 0xff;
+    const g = (newBiome.topColor >> 8) & 0xff;
+    const b = newBiome.topColor & 0xff;
+    this.cameras.main.flash(400, r, g, b, true);
+
+    // Show biome name
+    this.showBiomeName(newBiome.name);
+  }
+
+  private showBiomeName(name: string): void {
+    const text = this.add.text(GAME_WIDTH / 2, this.cameras.main.scrollY - 50, name, {
+      fontSize: '28px',
+      fontFamily: 'Arial Black, Arial, sans-serif',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 4,
+    }).setOrigin(0.5).setDepth(500).setAlpha(0);
+
+    // Big entrance with scale
+    this.tweens.add({
+      targets: text,
+      alpha: 1,
+      scale: 1.2,
+      duration: 300,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.tweens.add({
+          targets: text,
+          scale: 1,
+          duration: 100,
+        });
+      },
+    });
+
+    // Fade out after 1.5s
+    this.tweens.add({
+      targets: text,
+      alpha: 0,
+      y: text.y - 30,
+      delay: 1500,
+      duration: 500,
+      onComplete: () => text.destroy(),
+    });
   }
 
   // ─── UI ─────────────────────────────────────────────────────────────────────
@@ -765,7 +895,10 @@ export class GameScene extends Phaser.Scene {
 
       // Update HTML HUD
       window.dispatchEvent(new CustomEvent('updateHUD', {
-        detail: { score: this.score }
+        detail: { 
+          score: this.score,
+          height: Math.floor(this.maxHeight / 10)
+        }
       }));
 
       // Milestone celebration every 1000 points
@@ -1169,6 +1302,17 @@ export class GameScene extends Phaser.Scene {
       if (playerRight > bounds.left && playerLeft < bounds.right &&
           playerBottom > bounds.top && playerTop < bounds.bottom) {
 
+        // Bounce off enemy — no matter where you hit from
+        if (!this.activePowerups.has('shield')) {
+          // Bounce off enemy!
+          this.player.bounceOffEnemy();
+          this.soundManager.playBoost();
+          this.showBounceOffEnemyEffect(enemy);
+          enemy.destroy();
+          this.enemies.splice(i, 1);
+          continue;
+        }
+
         // Shield protects from enemy
         if (this.activePowerups.has('shield')) {
           this.showShieldHitEffect(enemy);
@@ -1269,6 +1413,47 @@ export class GameScene extends Phaser.Scene {
         targets: particle,
         x: particle.x + Math.cos(angle) * 60,
         y: particle.y + Math.sin(angle) * 60,
+        alpha: 0,
+        scale: 0,
+        duration: 400,
+        onComplete: () => particle.destroy(),
+      });
+    }
+  }
+
+  private showBounceOffEnemyEffect(enemy: Enemy): void {
+    // Cyan/white burst effect
+    const r = (this.currentBiome.particleColor >> 16) & 0xff;
+    const g = (this.currentBiome.particleColor >> 8) & 0xff;
+    const b = this.currentBiome.particleColor & 0xff;
+    this.cameras.main.flash(100, r, g, b, true);
+
+    // Ring effect expanding outward
+    const ring = this.add.circle(enemy.x, enemy.y, 10, 0x00ffff, 0.6);
+    ring.setDepth(100);
+    this.tweens.add({
+      targets: ring,
+      scale: 4,
+      alpha: 0,
+      duration: 300,
+      onComplete: () => ring.destroy(),
+    });
+
+    // Particle burst
+    for (let j = 0; j < 12; j++) {
+      const angle = (j / 12) * Math.PI * 2;
+      const particle = this.add.circle(
+        enemy.x + Math.cos(angle) * 15,
+        enemy.y + Math.sin(angle) * 15,
+        Phaser.Math.Between(3, 6),
+        0x00ffff
+      );
+      particle.setDepth(100);
+
+      this.tweens.add({
+        targets: particle,
+        x: particle.x + Math.cos(angle) * 50,
+        y: particle.y + Math.sin(angle) * 50,
         alpha: 0,
         scale: 0,
         duration: 400,

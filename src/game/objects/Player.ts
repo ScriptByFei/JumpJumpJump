@@ -37,8 +37,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private jumpCooldown: number = 0;
   private readonly JUMP_COOLDOWN_MS = 50;
 
-  // Movement
+  // Movement with momentum
   private currentMoveSpeed: number = PLAYER_MOVE_SPEED;
+  private velocityX: number = 0;
+  private readonly ACCELERATION = 2800;
+  private readonly DECELERATION = 1800;
+  private readonly MAX_SPEED = 380;
 
   // Squash/stretch
   private baseScaleX: number = 1;
@@ -180,8 +184,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.jumpCooldown -= _delta;
     }
 
-    // Handle horizontal movement from touch
-    let vx = this.touchDirection * this.currentMoveSpeed;
+    // Handle horizontal movement with momentum
+    const targetVelX = this.touchDirection * this.currentMoveSpeed;
     
     // Track last direction for shooting
     if (this.touchDirection !== 0) {
@@ -191,8 +195,28 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     // Reset speed to default
     this.currentMoveSpeed = PLAYER_MOVE_SPEED;
 
+    // Apply momentum-based acceleration/deceleration
+    if (targetVelX !== 0) {
+      // Accelerate toward target
+      if (this.velocityX < targetVelX) {
+        this.velocityX = Math.min(this.velocityX + this.ACCELERATION * (_delta / 1000), targetVelX);
+      } else {
+        this.velocityX = Math.max(this.velocityX - this.ACCELERATION * (_delta / 1000), targetVelX);
+      }
+    } else {
+      // Decelerate to stop
+      if (this.velocityX > 0) {
+        this.velocityX = Math.max(0, this.velocityX - this.DECELERATION * (_delta / 1000));
+      } else if (this.velocityX < 0) {
+        this.velocityX = Math.min(0, this.velocityX + this.DECELERATION * (_delta / 1000));
+      }
+    }
+
+    // Clamp to max speed
+    this.velocityX = Math.max(-this.MAX_SPEED, Math.min(this.MAX_SPEED, this.velocityX));
+
     // Apply velocity
-    this.body!.velocity.x = vx;
+    this.body!.velocity.x = this.velocityX;
 
     // Update bullets - remove off-screen
     this.bullets = this.bullets.filter(bullet => {
@@ -277,6 +301,36 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     // More particles for boost
     this.triggerBoostEffect();
+  }
+
+  // ─── Bounce off enemy (from below) ──────────────────────────────────────────
+  bounceOffEnemy(): void {
+    // Super jump when bouncing off enemy from below
+    const bounceVel = PLAYER_JUMP_VELOCITY * 1.2;
+    this.body!.velocity.y = bounceVel;
+    this.jumpCooldown = this.JUMP_COOLDOWN_MS;
+
+    // Intense squash/stretch for bounce
+    this.squash(0.6, 1.4, 120);
+
+    // Bounce particles
+    this.triggerBounceEffect();
+  }
+
+  private triggerBounceEffect(): void {
+    // Burst of cyan/white particles for enemy bounce
+    const bounceParticles = this.scene.add.particles(this.x, this.y, 'particle_circle', {
+      speed: { min: 80, max: 200 },
+      angle: { min: 200, max: 340 },
+      scale: { start: 0.5, end: 0 },
+      alpha: { start: 0.9, end: 0 },
+      lifespan: 500,
+      gravityY: 100,
+      quantity: 15,
+      tint: 0x00ffff,
+    });
+
+    this.scene.time.delayedCall(600, () => bounceParticles.destroy());
   }
 
   // ─── Powerup Methods ─────────────────────────────────────────────────────────
@@ -437,6 +491,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   isFalling(): boolean {
     return this.body!.velocity.y > 0;
+  }
+
+  isMovingUp(): boolean {
+    return this.body!.velocity.y < -50;
   }
 
   getBottom(): number {
