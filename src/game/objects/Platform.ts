@@ -189,43 +189,88 @@ export class Platform extends Phaser.GameObjects.Image {
   }
 
   private triggerLandEffect(): void {
-    // Small particle burst on normal/moving platforms
+    // Enhanced particle burst with more particles and trail effect
     const particles = this.scene.add.particles(this.x, this.y - 5, 'particle_circle', {
-      speed: { min: 20, max: 50 },
-      angle: { min: 180, max: 220 },
-      scale: { start: 0.3, end: 0 },
-      alpha: { start: 0.6, end: 0 },
-      lifespan: 300,
-      gravityY: 50,
-      quantity: 5,
+      speed: { min: 30, max: 80 },
+      angle: { min: 160, max: 220 },
+      scale: { start: 0.4, end: 0 },
+      alpha: { start: 0.8, end: 0 },
+      lifespan: 400,
+      gravityY: 100,
+      quantity: 8,
       tint: this.typeConfig.color,
+      blendMode: Phaser.BlendModes.ADD,
     });
 
-    this.scene.time.delayedCall(400, () => particles.destroy());
+    // White shine particles
+    const shineParticles = this.scene.add.particles(this.x, this.y - 8, 'particle_circle', {
+      speed: { min: 50, max: 100 },
+      angle: { min: 170, max: 190 },
+      scale: { start: 0.2, end: 0 },
+      alpha: { start: 0.9, end: 0 },
+      lifespan: 300,
+      gravityY: 50,
+      quantity: 4,
+      tint: 0xffffff,
+      blendMode: Phaser.BlendModes.ADD,
+    });
+
+    this.scene.time.delayedCall(500, () => {
+      particles.destroy();
+      shineParticles.destroy();
+    });
+
+    // Subtle platform bounce
+    this.scene.tweens.add({
+      targets: this,
+      scaleY: 0.85,
+      duration: 50,
+      yoyo: true,
+      ease: 'Quad.easeOut',
+    });
   }
 
   private triggerBoostEffect(): void {
-    // More intense particles for boost
+    // Intense boost particles with multiple colors
     const particles = this.scene.add.particles(this.x, this.y - 10, 'particle_star', {
-      speed: { min: 80, max: 200 },
-      angle: { min: 240, max: 300 },
-      scale: { start: 0.5, end: 0 },
+      speed: { min: 100, max: 250 },
+      angle: { min: 230, max: 310 },
+      scale: { start: 0.6, end: 0 },
       alpha: { start: 1, end: 0 },
-      lifespan: 600,
-      gravityY: -100,
-      quantity: 12,
+      lifespan: 700,
+      gravityY: -150,
+      quantity: 18,
       tint: COLORS.platformBoost,
+      blendMode: Phaser.BlendModes.ADD,
     });
 
-    this.scene.time.delayedCall(700, () => particles.destroy());
+    // Extra white burst particles
+    const burstParticles = this.scene.add.particles(this.x, this.y - 15, 'particle_circle', {
+      speed: { min: 150, max: 300 },
+      angle: { min: 240, max: 300 },
+      scale: { start: 0.4, end: 0 },
+      alpha: { start: 1, end: 0 },
+      lifespan: 500,
+      quantity: 10,
+      tint: 0xffffff,
+      blendMode: Phaser.BlendModes.ADD,
+    });
 
-    // Flash effect
+    this.scene.time.delayedCall(800, () => {
+      particles.destroy();
+      burstParticles.destroy();
+    });
+
+    // Flash effect with scale pulse
     this.scene.tweens.add({
       targets: this,
-      alpha: 0.5,
-      duration: 100,
+      alpha: 0.4,
+      scaleX: 1.1,
+      scaleY: 0.9,
+      duration: 80,
       yoyo: true,
       repeat: 1,
+      ease: 'Quad.easeOut',
     });
   }
 
@@ -238,23 +283,50 @@ export class Platform extends Phaser.GameObjects.Image {
     if (this.floatTween) this.floatTween.stop();
     if (this.pulseTween) this.pulseTween.stop();
 
-    // Break particles
+    // Enhanced break particles with debris effect
     const particles = this.scene.add.particles(this.x, this.y, 'particle_square', {
-      speed: { min: 50, max: 150 },
+      speed: { min: 80, max: 200 },
       angle: { min: 0, max: 360 },
-      scale: { start: 0.5, end: 0 },
+      scale: { start: 0.6, end: 0 },
       alpha: { start: 1, end: 0 },
-      lifespan: 500,
-      gravityY: 400,
-      quantity: ANIMATION.BREAK_PARTICLE_COUNT,
+      lifespan: 600,
+      gravityY: 500,
+      quantity: 15,
       tint: COLORS.platformBreakable,
+      blendMode: Phaser.BlendModes.ADD,
     });
 
-    this.scene.time.delayedCall(600, () => particles.destroy());
+    // Dust cloud particles
+    const dustParticles = this.scene.add.particles(this.x, this.y, 'particle_circle', {
+      speed: { min: 30, max: 80 },
+      angle: { min: 0, max: 360 },
+      scale: { start: 0.8, end: 0 },
+      alpha: { start: 0.5, end: 0 },
+      lifespan: 400,
+      quantity: 8,
+      tint: 0x8b5a5a,
+    });
+
+    this.scene.time.delayedCall(700, () => {
+      particles.destroy();
+      dustParticles.destroy();
+    });
+
+    // Platform shake then disappear
+    this.scene.tweens.add({
+      targets: this,
+      alpha: 0,
+      scaleX: 1.3,
+      scaleY: 0.5,
+      duration: 200,
+      ease: 'Back.easeIn',
+    });
 
     // Remove from scene
-    this.setVisible(false);
-    this.setActive(false);
+    this.scene.time.delayedCall(200, () => {
+      this.setVisible(false);
+      this.setActive(false);
+    });
   }
 
   private fade(): void {
