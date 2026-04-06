@@ -481,12 +481,16 @@ export class GameScene extends Phaser.Scene {
     // Update combo timeout
     this.checkComboTimeout(_time);
 
-    // Update background based on height
-    this.updateBackgroundGradient(this.maxHeight);
+    // Update background only when height changes significantly (performance)
+    if (Math.abs(this.maxHeight - this.lastGradientHeight) > 100) {
+      this.updateBackgroundGradient(this.maxHeight);
+      this.lastGradientHeight = this.maxHeight;
+    }
   }
 
   // ─── Collision ──────────────────────────────────────────────────────────────
   private lastPlatformY: number = 0;
+  private lastGradientHeight: number = 0;
 
   private checkCollisions(): void {
     if (!this.player.isFalling()) return;
@@ -823,8 +827,10 @@ export class GameScene extends Phaser.Scene {
   private removePlatformsBelowCamera(cameraTop: number): void {
     const removeThreshold = cameraTop + GAME_HEIGHT + PLATFORM_REMOVE_BELOW;
 
+    // Remove dead (broken/faded) and off-screen platforms in one pass
     this.platforms = this.platforms.filter(platform => {
-      if (platform.y > removeThreshold) {
+      // Destroy platforms below camera or that are dead
+      if (platform.y > removeThreshold || !platform.alive) {
         platform.destroy();
         return false;
       }

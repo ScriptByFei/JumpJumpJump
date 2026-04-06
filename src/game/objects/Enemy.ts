@@ -9,6 +9,9 @@ export class Enemy extends Phaser.GameObjects.Container {
   private glow!: Phaser.GameObjects.Graphics;
   private mainBody!: Phaser.GameObjects.Graphics;
 
+  // Cached bounds
+  private _bounds?: { left: number; right: number; top: number; bottom: number };
+
   constructor(scene: Phaser.Scene, x: number, y: number, type: EnemyType) {
     super(scene, x, y);
     this.enemyType = type;
@@ -259,13 +262,23 @@ export class Enemy extends Phaser.GameObjects.Container {
   }
 
   getCollisionBounds(): { left: number; right: number; top: number; bottom: number } {
-    const size = this.enemyType === 'ufo' ? ENEMY.UFO.SIZE : ENEMY.SPIKE.SIZE;
-    return {
-      left: this.x - size / 2,
-      right: this.x + size / 2,
-      top: this.y - size / 2,
-      bottom: this.y + size / 2,
-    };
+    if (!this._bounds) {
+      const size = this.enemyType === 'ufo' ? ENEMY.UFO.SIZE : ENEMY.SPIKE.SIZE;
+      this._bounds = {
+        left: this.x - size / 2,
+        right: this.x + size / 2,
+        top: this.y - size / 2,
+        bottom: this.y + size / 2,
+      };
+    } else {
+      // Update cached bounds
+      const size = this.enemyType === 'ufo' ? ENEMY.UFO.SIZE : ENEMY.SPIKE.SIZE;
+      this._bounds.left = this.x - size / 2;
+      this._bounds.right = this.x + size / 2;
+      this._bounds.top = this.y - size / 2;
+      this._bounds.bottom = this.y + size / 2;
+    }
+    return this._bounds;
   }
 
   destroy(fromScene?: boolean): void {

@@ -21,6 +21,11 @@ export class Platform extends Phaser.GameObjects.Image {
   public alive: boolean = true;
   public touched: boolean = false;
 
+  // Cached bounds (recalculate only when position changes)
+  private _top?: number;
+  private _left?: number;
+  private _right?: number;
+
   // Type-specific state
   private moveSpeed: number;
   private moveRangeMin: number;
@@ -80,6 +85,7 @@ export class Platform extends Phaser.GameObjects.Image {
         ease: 'Linear',
         yoyo: true,
         repeat: -1,
+        onUpdate: () => this.invalidateCache(),
       });
     } else {
       // Floating animation for non-moving platforms
@@ -274,15 +280,25 @@ export class Platform extends Phaser.GameObjects.Image {
 
   // ─── Getters ─────────────────────────────────────────────────────────────────
   getTop(): number {
-    return this.y - PLATFORM_HEIGHT / 2;
+    if (this._top === undefined) this._top = this.y - PLATFORM_HEIGHT / 2;
+    return this._top;
   }
 
   getLeft(): number {
-    return this.x - PLATFORM_WIDTH / 2;
+    if (this._left === undefined) this._left = this.x - PLATFORM_WIDTH / 2;
+    return this._left;
   }
 
   getRight(): number {
-    return this.x + PLATFORM_WIDTH / 2;
+    if (this._right === undefined) this._right = this.x + PLATFORM_WIDTH / 2;
+    return this._right;
+  }
+
+  // Invalidate cache when position changes (for moving platforms)
+  invalidateCache(): void {
+    this._top = undefined;
+    this._left = undefined;
+    this._right = undefined;
   }
 
   getWidth(): number {
