@@ -21,6 +21,7 @@ import { Player } from '../objects/Player';
 import { Platform } from '../objects/Platform';
 import { Powerup } from '../objects/Powerup';
 import { Enemy } from '../objects/Enemy';
+import { AchievementManager } from '../systems/AchievementManager';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Game Scene - Enhanced with combo system, sounds, and better effects
@@ -132,6 +133,7 @@ export class GameScene extends Phaser.Scene {
   private score: number = 0;
   private highScore: number = 0;
   private isGameOver: boolean = false;
+  private gameOverCount: number = 0;
   private startY: number = 0;
   private maxHeight: number = 0;
 
@@ -149,6 +151,7 @@ export class GameScene extends Phaser.Scene {
   // Combo system
   private combo: number = 0;
   private comboMultiplier: number = 1;
+  private totalJumps: number = 0;
   private lastLandTime: number = 0;
   private comboTimeout: number = 2000; // ms to maintain combo
 
@@ -160,6 +163,7 @@ export class GameScene extends Phaser.Scene {
 
   // Sound
   private soundManager = new SoundManager();
+  private achievementManager!: AchievementManager;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -176,6 +180,7 @@ export class GameScene extends Phaser.Scene {
     this.platforms = [];
     this.combo = 0;
     this.comboMultiplier = 1;
+    this.totalJumps = 0;
 
     // Reset powerups
     this.powerups.forEach(p => p.destroy());
@@ -192,6 +197,9 @@ export class GameScene extends Phaser.Scene {
 
     // Load high score
     this.highScore = parseInt(localStorage.getItem(HIGHSCORE_KEY) || '0');
+
+    // Initialize achievement manager
+    this.achievementManager = new AchievementManager(this);
 
     // Dispatch initial HUD values to HTML overlay
     window.dispatchEvent(new CustomEvent('updateHUD', {
@@ -552,6 +560,13 @@ export class GameScene extends Phaser.Scene {
       detail: { combo: this.combo }
     }));
 
+    // Track achievements for jumps and combo
+    this.totalJumps++;
+    if (this.achievementManager) {
+      this.achievementManager.trackJump(this.totalJumps);
+      this.achievementManager.trackCombo(this.combo);
+    }
+
     // Sound effects
     this.soundManager.playLand();
 
@@ -681,6 +696,12 @@ export class GameScene extends Phaser.Scene {
     if (this.isGameOver) return;
     this.isGameOver = true;
 
+    // Track game over achievement
+    this.gameOverCount++;
+    if (this.achievementManager) {
+      this.achievementManager.trackGameOver(this.gameOverCount);
+    }
+
     // Hide HTML pause overlay and HUD when game ends
     const pauseOverlay = document.getElementById('pause-overlay');
     const gameHud = document.getElementById('game-hud');
@@ -725,6 +746,10 @@ export class GameScene extends Phaser.Scene {
     
     if (currentHeight > this.maxHeight) {
       this.maxHeight = currentHeight;
+      // Track height achievements
+      if (this.achievementManager) {
+        this.achievementManager.trackHeight(this.maxHeight);
+      }
     }
 
     let newScore = Math.floor((this.maxHeight / 10) * this.comboMultiplier);
@@ -900,6 +925,11 @@ export class GameScene extends Phaser.Scene {
     powerup.collect();
     this.powerups.splice(index, 1);
     const type = powerup.powerupType;
+
+    // Track powerup achievement
+    if (this.achievementManager) {
+      this.achievementManager.trackPowerup(type);
+    }
 
     this.activatePowerup(type);
     this.showPowerupEffect(powerup.x, powerup.y, type);

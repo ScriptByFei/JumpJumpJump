@@ -206,7 +206,7 @@ export function calculateSafeArea(): void {
   if (typeof document !== 'undefined') {
     const style = getComputedStyle(document.documentElement);
     SAFE_AREA = {
-      top: parseInt(style.getPropertyValue('--sat') || '0') || 
+      top: parseInt(style.getPropertyValue('--sat') || '0') ||
             parseInt(style.getPropertyValue('padding-top') || '0'),
       bottom: parseInt(style.getPropertyValue('--sab') || '0') ||
               parseInt(style.getPropertyValue('padding-bottom') || '0'),
@@ -215,3 +215,47 @@ export function calculateSafeArea(): void {
     };
   }
 }
+
+// ─── Achievements ─────────────────────────────────────────────────────────────────
+export type AchievementId =
+  | 'first_jump'
+  | 'jump_50'
+  | 'jump_100'
+  | 'jump_500'
+  | 'height_1000'
+  | 'height_5000'
+  | 'height_10000'
+  | 'combo_5'
+  | 'combo_10'
+  | 'combo_20'
+  | 'powerup_first'
+  | 'powerup_all'
+  | 'game_over_5'
+  | 'game_over_20';
+
+export interface Achievement {
+  id: AchievementId;
+  name: string;
+  description: string;
+  icon: string;
+  color: number;
+}
+
+export const ACHIEVEMENTS: Record<AchievementId, Achievement> = {
+  first_jump: { id: 'first_jump', name: 'First Steps', description: 'Make your first jump', icon: '👣', color: 0x4ecdc4 },
+  jump_50: { id: 'jump_50', name: 'Getting Started', description: 'Jump 50 times in one game', icon: '🦘', color: 0xfeca57 },
+  jump_100: { id: 'jump_100', name: 'Bunny Hop', description: 'Jump 100 times in one game', icon: '🐰', color: 0xff6b6b },
+  jump_500: { id: 'jump_500', name: 'Jumping Jack', description: 'Jump 500 times in one game', icon: '⭐', color: 0xa855f7 },
+  height_1000: { id: 'height_1000', name: 'Starter Height', description: 'Reach 1000 height', icon: '📏', color: 0x4ecdc4 },
+  height_5000: { id: 'height_5000', name: 'Cloud Nine', description: 'Reach 5000 height', icon: '☁️', color: 0xfeca57 },
+  height_10000: { id: 'height_10000', name: 'Space Cadet', description: 'Reach 10000 height', icon: '🚀', color: 0xa855f7 },
+  combo_5: { id: 'combo_5', name: 'Combo Starter', description: 'Get a 5x combo', icon: '🔥', color: 0xff6b6b },
+  combo_10: { id: 'combo_10', name: 'Combo Master', description: 'Get a 10x combo', icon: '💥', color: 0xa855f7 },
+  combo_20: { id: 'combo_20', name: 'Combo Legend', description: 'Get a 20x combo', icon: '👑', color: 0xffd700 },
+  powerup_first: { id: 'powerup_first', name: 'Power Up', description: 'Collect your first powerup', icon: '⚡', color: 0xffd700 },
+  powerup_all: { id: 'powerup_all', name: 'Fully Powered', description: 'Use all powerup types', icon: '🎯', color: 0x00d4ff },
+  game_over_5: { id: 'game_over_5', name: 'Perseverance', description: 'Game over 5 times', icon: '💪', color: 0x8b90a5 },
+  game_over_20: { id: 'game_over_20', name: 'Never Give Up', description: 'Game over 20 times', icon: '🏆', color: 0xffd700 },
+};
+
+export const ACHIEVEMENTS_KEY = 'jumpjumpjump-achievements';
