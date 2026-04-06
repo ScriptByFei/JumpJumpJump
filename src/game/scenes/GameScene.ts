@@ -359,7 +359,7 @@ export class GameScene extends Phaser.Scene {
     // Spawn powerup?
     const height = this.startY - y;
     if (height > POWERUP.MIN_HEIGHT && Math.random() < POWERUP.SPAWN_CHANCE) {
-      const types: PowerupType[] = ['shield', 'magnet', 'rocket', 'double'];
+      const types: PowerupType[] = ['shield', 'magnet', 'rocket', 'double', 'gun'];
       const pType = types[Math.floor(Math.random() * types.length)];
       this.powerups.push(new Powerup(this, x, y - 40, pType));
     }
@@ -962,6 +962,7 @@ export class GameScene extends Phaser.Scene {
     switch (type) {
       case 'rocket': this.player.activateRocket(true); break;
       case 'shield': this.player.activateShield(true); break;
+      case 'gun': this.player.activateGun(true); break;
     }
 
     this.createPowerupIndicator(type);
@@ -978,6 +979,7 @@ export class GameScene extends Phaser.Scene {
     switch (type) {
       case 'rocket': this.player.activateRocket(false); break;
       case 'shield': this.player.activateShield(false); break;
+      case 'gun': this.player.activateGun(false); break;
     }
 
     this.removePowerupIndicator(type);
@@ -1016,7 +1018,7 @@ export class GameScene extends Phaser.Scene {
     container.add(bg);
 
     const symbols: Record<PowerupType, string> = {
-      shield: 'S', magnet: 'M', rocket: 'R', double: '2x'
+      shield: 'S', magnet: 'M', rocket: 'R', double: '2x', gun: 'G'
     };
     const symbol = this.add.text(0, 0, symbols[type], {
       fontSize: '10px',
@@ -1071,7 +1073,7 @@ export class GameScene extends Phaser.Scene {
 
   private showPowerupEffect(_x: number, _y: number, type: PowerupType): void {
     const colors: Record<PowerupType, number> = {
-      shield: 0x00d4ff, magnet: 0xff4081, rocket: 0xff6b35, double: 0xffd700
+      shield: 0x00d4ff, magnet: 0xff4081, rocket: 0xff6b35, double: 0xffd700, gun: 0xfeca57
     };
     const color = colors[type];
     this.cameras.main.flash(100, (color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff, true);
@@ -1177,6 +1179,73 @@ export class GameScene extends Phaser.Scene {
           return;
         }
       }
+    }
+
+    // Check bullet-enemy collisions
+    this.checkBulletCollisions();
+  }
+
+  private checkBulletCollisions(): void {
+    const bullets = this.player.getBullets();
+    const bulletsToDestroy: any[] = [];
+
+    for (const bullet of bullets) {
+      const bulletBounds = {
+        left: bullet.x - 4,
+        right: bullet.x + 4,
+        top: bullet.y - 4,
+        bottom: bullet.y + 4,
+      };
+
+      for (let i = this.enemies.length - 1; i >= 0; i--) {
+        const enemy = this.enemies[i];
+        const enemyBounds = enemy.getCollisionBounds();
+
+        if (bulletBounds.right > enemyBounds.left && bulletBounds.left < enemyBounds.right &&
+            bulletBounds.bottom > enemyBounds.top && bulletBounds.top < enemyBounds.bottom) {
+
+          // Enemy destroyed!
+          this.showEnemyDestroyEffect(enemy);
+          enemy.destroy();
+          this.enemies.splice(i, 1);
+          bulletsToDestroy.push(bullet);
+
+          // Small screen shake
+          this.cameras.main.shake(100, 0.005);
+          break;
+        }
+      }
+    }
+
+    if (bulletsToDestroy.length > 0) {
+      this.player.destroyBullets(bulletsToDestroy);
+    }
+  }
+
+  private showEnemyDestroyEffect(enemy: Enemy): void {
+    const color = enemy.enemyType === 'ufo' ? ENEMY.UFO.COLOR : ENEMY.SPIKE.COLOR;
+
+    // Explosion particles
+    for (let j = 0; j < 15; j++) {
+      const angle = (j / 15) * Math.PI * 2;
+      const particle = this.add.circle(
+        enemy.x + Math.cos(angle) * 10,
+        enemy.y + Math.sin(angle) * 10,
+        5,
+        color
+      );
+      particle.setDepth(100);
+
+      this.tweens.add({
+        targets: particle,
+        x: particle.x + Math.cos(angle) * 50,
+        y: particle.y + Math.sin(angle) * 50,
+        alpha: 0,
+        scale: 0,
+        duration: 400,
+        ease: 'Quad.easeOut',
+        onComplete: () => particle.destroy(),
+      });
     }
   }
 

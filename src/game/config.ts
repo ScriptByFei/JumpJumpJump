@@ -172,7 +172,7 @@ export const TOUCH = {
 };
 
 // ─── Powerups ──────────────────────────────────────────────────────────────────
-export type PowerupType = 'shield' | 'magnet' | 'rocket' | 'double';
+export type PowerupType = 'shield' | 'magnet' | 'rocket' | 'double' | 'gun';
 
 export const POWERUP = {
   SPAWN_CHANCE: 0.03,
@@ -184,6 +184,7 @@ export const POWERUP = {
     magnet: 8000,
     rocket: 10000,
     double: 15000,
+    gun: 12000, // 12 seconds max (but ammo limited to 5 shots)
   },
 };
 
@@ -192,6 +193,15 @@ export const POWERUP_TYPES = {
   magnet: { color: 0xff4081, symbol: 'M' },
   rocket: { color: 0xff6b35, symbol: 'R' },
   double: { color: 0xffd700, symbol: '2x' },
+  gun: { color: 0xffd700, symbol: 'G' },
+};
+
+// ─── Gun Settings ──────────────────────────────────────────────────────────────
+export const GUN = {
+  AMMO: 5,
+  BULLET_SPEED: 600,
+  BULLET_SIZE: 8,
+  FIRE_COOLDOWN: 250, // ms between shots
 };
 
 // ─── Safe Area (will be calculated at runtime) ───────────────────────────────

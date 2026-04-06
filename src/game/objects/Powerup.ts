@@ -40,6 +40,7 @@ export class Powerup extends Phaser.GameObjects.Container {
       magnet: 'M',
       rocket: 'R',
       double: '2x',
+      gun: 'G',
     };
 
     const symbolText = scene.add.text(0, 1, symbols[type], {

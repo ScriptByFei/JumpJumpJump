@@ -10,7 +10,21 @@ import {
   ANIMATION,
   TOUCH,
   COLORS,
+  GUN,
 } from '../config';
+
+// Bullet class
+class Bullet extends Phaser.Physics.Arcade.Image {
+  constructor(scene: Phaser.Scene, x: number, y: number, direction: number) {
+    super(scene, x, y, 'particle_circle');
+    this.setTintFill(0xfeca57);
+    this.setScale(GUN.BULLET_SIZE / 10);
+    this.setDepth(60);
+    scene.physics.add.existing(this);
+    (this.body as Phaser.Physics.Arcade.Body).setVelocityX(direction * GUN.BULLET_SPEED);
+    scene.add.existing(this);
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Player - The jumping character with touch controls and squash/stretch
@@ -43,6 +57,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private hasRocket: boolean = false;
   private hasShield: boolean = false;
   private shieldGfx?: Phaser.GameObjects.Graphics;
+  private hasGun: boolean = false;
+  private gunAmmo: number = 0;
+  private lastFireTime: number = 0;
+  private lastDirection: number = 1; // 1 = right, -1 = left
+  private bullets: Bullet[] = [];
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'player');
@@ -98,6 +117,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     scene.input.keyboard?.on('keydown-RIGHT', () => this.touchDirection = 1);
     scene.input.keyboard?.on('keyup-LEFT', () => { if (this.touchDirection === -1) this.touchDirection = 0; });
     scene.input.keyboard?.on('keyup-RIGHT', () => { if (this.touchDirection === 1) this.touchDirection = 0; });
+
+    // Shooting with Z or Space
+    scene.input.keyboard?.on('keydown-Z', () => this.tryShoot());
+    scene.input.keyboard?.on('keydown-SPACE', () => this.tryShoot());
   }
 
   private handleTouchStart(pointer: Phaser.Input.Pointer): void {
@@ -160,11 +183,25 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     // Handle horizontal movement from touch
     let vx = this.touchDirection * this.currentMoveSpeed;
     
+    // Track last direction for shooting
+    if (this.touchDirection !== 0) {
+      this.lastDirection = this.touchDirection;
+    }
+    
     // Reset speed to default
     this.currentMoveSpeed = PLAYER_MOVE_SPEED;
 
     // Apply velocity
     this.body!.velocity.x = vx;
+
+    // Update bullets - remove off-screen
+    this.bullets = this.bullets.filter(bullet => {
+      if (bullet.x < -50 || bullet.x > GAME_WIDTH + 50) {
+        bullet.destroy();
+        return false;
+      }
+      return true;
+    });
 
     // Screen wrap
     if (this.x < -PLAYER_SIZE_W) {
@@ -275,6 +312,70 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   hasActiveShield(): boolean { return this.hasShield; }
   hasActiveRocket(): boolean { return this.hasRocket; }
+  hasActiveGun(): boolean { return this.hasGun; }
+  getGunAmmo(): number { return this.gunAmmo; }
+
+  // ─── Gun Methods ──────────────────────────────────────────────────────────────
+  activateGun(active: boolean): void {
+    this.hasGun = active;
+    if (active) {
+      this.gunAmmo = GUN.AMMO;
+    }
+  }
+
+  private tryShoot(): void {
+    if (!this.hasGun || this.gunAmmo <= 0) return;
+
+    const now = this.scene.time.now;
+    if (now - this.lastFireTime < GUN.FIRE_COOLDOWN) return;
+
+    this.lastFireTime = now;
+    this.gunAmmo--;
+
+    // Create bullet
+    const bullet = new Bullet(
+      this.scene,
+      this.x + this.lastDirection * 20,
+      this.y,
+      this.lastDirection
+    );
+    this.bullets.push(bullet);
+
+    // Muzzle flash effect
+    const flash = this.scene.add.circle(
+      this.x + this.lastDirection * 20,
+      this.y,
+      8,
+      0xfeca57
+    );
+    flash.setDepth(61);
+    this.scene.tweens.add({
+      targets: flash,
+      alpha: 0,
+      scale: 2,
+      duration: 100,
+      onComplete: () => flash.destroy(),
+    });
+
+    // Check if gun is empty
+    if (this.gunAmmo <= 0) {
+      this.hasGun = false;
+    }
+  }
+
+  getBullets(): Bullet[] {
+    return this.bullets;
+  }
+
+  destroyBullets(bulletsToDestroy: Bullet[]): void {
+    bulletsToDestroy.forEach(bullet => {
+      const index = this.bullets.indexOf(bullet);
+      if (index > -1) {
+        this.bullets.splice(index, 1);
+      }
+      bullet.destroy();
+    });
+  }
 
   // ─── Squash & Stretch ────────────────────────────────────────────────────────
   private squash(scaleX: number, scaleY: number, duration: number): void {
