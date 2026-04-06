@@ -83,16 +83,16 @@ export type EnemyType = 'ufo' | 'spike';
 
 export const ENEMY = {
   UFO: {
-    SIZE: 40,
-    SPEED: 80,
-    COLOR: 0xff1744,
+    SIZE: 38,
+    SPEED: 70,
+    COLOR: 0xc4b5fd,
   },
   SPIKE: {
-    SIZE: 24,
-    FALL_SPEED: 120,
-    COLOR: 0xff6f00,
+    SIZE: 26,
+    FALL_SPEED: 100,
+    COLOR: 0x2d1b4e,
   },
-  SPAWN_CHANCE: 0.02,
+  SPAWN_CHANCE: 0.018,
 };
 
 // ─── Scoring ─────────────────────────────────────────────────────────────────
