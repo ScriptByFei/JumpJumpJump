@@ -105,50 +105,56 @@ export class AchievementManager {
   private showNotification(achievement: typeof ACHIEVEMENTS[keyof typeof ACHIEVEMENTS]): void {
     if (!this.notificationContainer) return;
 
-    const container = this.scene.add.container(400, 150);
+    const centerX = 200; // Center of GAME_WIDTH (400)
+    const y = 80;
+    const notifWidth = 220;
+    const notifHeight = 50;
+    const halfW = notifWidth / 2;
+
+    const container = this.scene.add.container(centerX, y);
     container.setDepth(1001);
 
-    // Background
+    // Background with gradient effect
     const bg = this.scene.add.graphics();
     bg.fillStyle(0x1a1a2e, 0.95);
-    bg.fillRoundedRect(-140, -30, 280, 60, 12);
+    bg.fillRoundedRect(-halfW, -notifHeight/2, notifWidth, notifHeight, 10);
     bg.lineStyle(2, achievement.color, 0.8);
-    bg.strokeRoundedRect(-140, -30, 280, 60, 12);
+    bg.strokeRoundedRect(-halfW, -notifHeight/2, notifWidth, notifHeight, 10);
     container.add(bg);
 
-    // Icon
-    const icon = this.scene.add.text(-110, 0, achievement.icon, {
-      fontSize: '24px',
+    // Icon (left side)
+    const icon = this.scene.add.text(-halfW + 20, 0, achievement.icon, {
+      fontSize: '20px',
     }).setOrigin(0.5);
     container.add(icon);
 
-    // Title
-    const title = this.scene.add.text(-70, -12, 'Achievement!', {
-      fontSize: '12px',
+    // Title + Name (right side)
+    const textX = -halfW + 50;
+    const title = this.scene.add.text(textX, -8, 'Achievement!', {
+      fontSize: '10px',
       fontFamily: 'Arial, sans-serif',
       color: '#8b90a5',
-    });
+    }).setOrigin(0, 0.5);
     container.add(title);
 
-    // Name
-    const name = this.scene.add.text(-70, 2, achievement.name, {
-      fontSize: '16px',
+    const name = this.scene.add.text(textX, 8, achievement.name, {
+      fontSize: '13px',
       fontFamily: 'Arial, sans-serif',
       color: '#ffffff',
       fontStyle: 'bold',
-    });
+    }).setOrigin(0, 0.5);
     container.add(name);
 
     // Add to container
     this.notificationContainer.add(container);
 
     // Animation: slide in from right, hold, slide out
-    container.setX(550);
+    container.setX(centerX + halfW + 50);
     container.setAlpha(0);
 
     this.scene.tweens.add({
       targets: container,
-      x: 400,
+      x: centerX,
       alpha: 1,
       duration: 300,
       ease: 'Back.easeOut',
@@ -157,7 +163,7 @@ export class AchievementManager {
         this.scene.time.delayedCall(2000, () => {
           this.scene.tweens.add({
             targets: container,
-            x: -150,
+            x: -halfW - 50,
             alpha: 0,
             duration: 300,
             ease: 'Back.easeIn',
@@ -168,7 +174,7 @@ export class AchievementManager {
     });
 
     // Celebration particles
-    this.spawnCelebrationParticles(container.x, container.y, achievement.color);
+    this.spawnCelebrationParticles(centerX, y, achievement.color);
   }
 
   private spawnCelebrationParticles(x: number, y: number, color: number): void {
