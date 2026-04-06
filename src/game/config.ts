@@ -73,6 +73,26 @@ export const DIFFICULTY = {
   SPECIAL_PLATFORM_START: 200,  // Height where special platforms start appearing
   SPECIAL_PLATFORM_CHANCE_START: 0.15,
   SPECIAL_PLATFORM_CHANCE_MAX: 0.45,
+  ENEMY_START_HEIGHT: 800,      // Height where enemies start spawning
+  ENEMY_SPAWN_INTERVAL: 5000,   // Base interval between enemy spawns (ms)
+  ENEMY_SPAWN_INTERVAL_MIN: 3000, // Minimum interval at max difficulty
+};
+
+// ─── Enemy Settings ─────────────────────────────────────────────────────────
+export type EnemyType = 'ufo' | 'spike';
+
+export const ENEMY = {
+  UFO: {
+    SIZE: 40,
+    SPEED: 80,
+    COLOR: 0xff1744,
+  },
+  SPIKE: {
+    SIZE: 24,
+    FALL_SPEED: 120,
+    COLOR: 0xff6f00,
+  },
+  SPAWN_CHANCE: 0.02,
 };
 
 // ─── Scoring ─────────────────────────────────────────────────────────────────

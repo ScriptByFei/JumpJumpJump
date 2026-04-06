@@ -14,10 +14,13 @@ import {
   POWERUP,
   POWERUP_TYPES,
   PowerupType,
+  ENEMY,
+  EnemyType,
 } from '../config';
 import { Player } from '../objects/Player';
 import { Platform } from '../objects/Platform';
 import { Powerup } from '../objects/Powerup';
+import { Enemy } from '../objects/Enemy';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Game Scene - Enhanced with combo system, sounds, and better effects
@@ -138,6 +141,11 @@ export class GameScene extends Phaser.Scene {
   private powerupTimers: Map<PowerupType, number> = new Map();
   private activePowerupIndicators: Phaser.GameObjects.Container[] = [];
 
+  // Enemies
+  private enemies: Enemy[] = [];
+  private lastEnemySpawn: number = 0;
+  private enemySpawnInterval: number = DIFFICULTY.ENEMY_SPAWN_INTERVAL;
+
   // Combo system
   private combo: number = 0;
   private comboMultiplier: number = 1;
@@ -175,6 +183,12 @@ export class GameScene extends Phaser.Scene {
     this.activePowerups.clear();
     this.clearPowerupTimers();
     this.clearPowerupIndicators();
+
+    // Reset enemies
+    this.enemies.forEach(e => e.destroy());
+    this.enemies = [];
+    this.lastEnemySpawn = 0;
+    this.enemySpawnInterval = DIFFICULTY.ENEMY_SPAWN_INTERVAL;
 
     // Load high score
     this.highScore = parseInt(localStorage.getItem(HIGHSCORE_KEY) || '0');
@@ -445,6 +459,12 @@ export class GameScene extends Phaser.Scene {
 
     // Check powerup collection
     this.checkPowerupCollection();
+
+    // Update enemies
+    this.updateEnemies(_delta);
+
+    // Check enemy collisions
+    this.checkEnemyCollisions();
 
     // Check game over
     this.checkGameOver();
@@ -1025,5 +1045,130 @@ export class GameScene extends Phaser.Scene {
     const style = getComputedStyle(document.documentElement);
     const sat = style.getPropertyValue('--sat').trim();
     return sat ? parseInt(sat) : 44;
+  }
+
+  // ─── Enemy Methods ───────────────────────────────────────────────────────────
+  private updateEnemies(_delta: number): void {
+    const height = this.startY - this.player.y;
+
+    // Spawn enemies after certain height
+    if (height > DIFFICULTY.ENEMY_START_HEIGHT && this.time.now - this.lastEnemySpawn > this.enemySpawnInterval) {
+      if (Math.random() < ENEMY.SPAWN_CHANCE) {
+        this.spawnEnemy();
+        this.lastEnemySpawn = this.time.now;
+
+        // Decrease spawn interval over time (increase difficulty)
+        const progress = Math.min(height / 15000, 1);
+        this.enemySpawnInterval = Phaser.Math.Linear(
+          DIFFICULTY.ENEMY_SPAWN_INTERVAL,
+          DIFFICULTY.ENEMY_SPAWN_INTERVAL_MIN,
+          progress
+        );
+      }
+    }
+
+    // Update each enemy
+    for (const enemy of this.enemies) {
+      enemy.update(this.time.now, _delta);
+    }
+
+    // Remove enemies that are off screen
+    const cameraTop = this.cameras.main.scrollY;
+    const cameraBottom = cameraTop + GAME_HEIGHT;
+
+    this.enemies = this.enemies.filter(enemy => {
+      // UFO: remove if off left/right
+      if (enemy.enemyType === 'ufo') {
+        if (enemy.x < -50 || enemy.x > GAME_WIDTH + 50) {
+          enemy.destroy();
+          return false;
+        }
+      }
+      // Spike: remove if below camera
+      if (enemy.enemyType === 'spike') {
+        if (enemy.y > cameraBottom + 100) {
+          enemy.destroy();
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  private spawnEnemy(): void {
+    const types: EnemyType[] = ['ufo', 'spike'];
+    const type = types[Math.floor(Math.random() * types.length)];
+
+    let x: number, y: number;
+
+    if (type === 'ufo') {
+      // Spawn at left or right edge, random Y above camera
+      x = Math.random() > 0.5 ? -30 : GAME_WIDTH + 30;
+      y = this.cameras.main.scrollY - 50 - Math.random() * 100;
+    } else {
+      // Spike: spawn above camera, random X
+      x = Phaser.Math.Between(50, GAME_WIDTH - 50);
+      y = this.cameras.main.scrollY - 100;
+    }
+
+    const enemy = new Enemy(this, x, y, type);
+    this.enemies.push(enemy);
+  }
+
+  private checkEnemyCollisions(): void {
+    if (!this.player.isFalling()) return;
+
+    const playerLeft = this.player.getLeft();
+    const playerRight = this.player.getRight();
+    const playerTop = this.player.getTop();
+    const playerBottom = this.player.getBottom();
+
+    for (let i = this.enemies.length - 1; i >= 0; i--) {
+      const enemy = this.enemies[i];
+      const bounds = enemy.getCollisionBounds();
+
+      // Check collision
+      if (playerRight > bounds.left && playerLeft < bounds.right &&
+          playerBottom > bounds.top && playerTop < bounds.bottom) {
+
+        // Shield protects from enemy
+        if (this.activePowerups.has('shield')) {
+          this.showShieldHitEffect(enemy);
+          enemy.destroy();
+          this.enemies.splice(i, 1);
+        } else {
+          this.triggerGameOver();
+          return;
+        }
+      }
+    }
+  }
+
+  private showShieldHitEffect(enemy: Enemy): void {
+    // Flash effect
+    this.cameras.main.flash(100, 0, 229, 255, true);
+
+    // Particle burst
+    const color = enemy.enemyType === 'ufo' ? ENEMY.UFO.COLOR : ENEMY.SPIKE.COLOR;
+    for (let j = 0; j < 10; j++) {
+      const angle = (j / 10) * Math.PI * 2;
+      const particle = this.add.circle(
+        enemy.x + Math.cos(angle) * 20,
+        enemy.y + Math.sin(angle) * 20,
+        5,
+        color
+      );
+      particle.setDepth(100);
+
+      this.tweens.add({
+        targets: particle,
+        x: particle.x + Math.cos(angle) * 60,
+        y: particle.y + Math.sin(angle) * 60,
+        alpha: 0,
+        scale: 0,
+        duration: 400,
+        onComplete: () => particle.destroy(),
+      });
+    }
   }
 }
