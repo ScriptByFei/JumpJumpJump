@@ -84,8 +84,9 @@ export class BootScene extends Phaser.Scene {
 
     // Do some math operations to help JIT (use results to avoid dead code elimination)
     let result = 0;
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 5000; i++) {
       result += Math.sin(i) * Math.cos(i);
+      result += Math.sqrt(i + 1) * Math.tan(i * 0.001);
     }
     // Touch result so it's not optimized away
     if (result === result) console.log('JIT warmup complete');
@@ -128,9 +129,9 @@ export class BootScene extends Phaser.Scene {
                     // JIT warmup before starting game
                     this.warmupJIT();
 
-                    // Small delay then start game
-                    this.loadingText.setText('Ready!');
-                    this.time.delayedCall(200, () => {
+                    // Mandatory delay to let iOS finish JIT compilation
+                    this.loadingText.setText('Starting...');
+                    this.time.delayedCall(1500, () => {
                       this.scene.start('GameScene');
                     });
                   });
